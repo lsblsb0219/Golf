@@ -129,6 +129,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="golf.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="fragmentShaderSource.glsl" />
+    <None Include="vertexShaderSource.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
