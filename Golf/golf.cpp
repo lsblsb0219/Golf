@@ -203,7 +203,7 @@ GLuint make_shaderProgram()
 
     return ShaderProgramID;
 }
-bool depth = false;
+
 GLuint VAO, VBO[2];
 void InitBuffer()
 {
@@ -237,15 +237,8 @@ void InitBuffer()
 
 bool hFlag = false;
 bool wFlag = true;
-bool cFlag = false;
 
-bool xFlag = false;
-float xAngle{};
-
-bool yFlag = false;
 float yAngle{};
-
-float xTrans{}, yTrans{};
 
 GLvoid drawScene() {
 
@@ -278,9 +271,7 @@ GLvoid drawScene() {
     glUniformMatrix4fv(viewLocation, 1, GL_FALSE, &vTransform[0][0]);
 
     glm::mat4 shapeTransForm = glm::mat4(1.0f);//변환 행렬 생성 T
-    shapeTransForm = glm::translate(shapeTransForm, glm::vec3(xTrans, yTrans, 0.0));//이동
     shapeTransForm = glm::rotate(shapeTransForm, glm::radians(yAngle), glm::vec3(0.0, 1.0, 0.0));//y축 회전
-    shapeTransForm = glm::rotate(shapeTransForm, glm::radians(xAngle), glm::vec3(1.0, 0.0, 0.0));//x축 회전
     glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(shapeTransForm));//변환 행렬을 셰이더에 전달
     
 
