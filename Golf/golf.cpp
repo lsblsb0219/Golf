@@ -117,20 +117,38 @@ bool yFlag = true;
 float yAngle{};
 
 // 구의 초기 위치를 저장하는 변수
-glm::vec3 spherePosition(0.0f, 2.0f, 2.0f);
+glm::vec3 spherePosition(0.0f, 0.55f, 0.0f);
 
 glm::vec3 targetPosition = spherePosition; // 목표 위치
 float moveSpeed = 0.02f; // 이동 속도
+
 // 카메라 변환용 변수
 glm::vec3 cameraOffset(0.0f, 0.4f, 0.6f); // 공과 카메라 사이의 고정 거리 (위, 뒤)
 glm::vec3 cameraPos = spherePosition + cameraOffset; // 초기 카메라 위치
 glm::vec3 initialCameraDir = glm::normalize(-cameraOffset); // 공을 바라보는 초기 방향
+
 // 골대
+glm::mat4 GoalTransForm;
+
 float GoalLocationX = 0.0f;
 float GoalLocationY = 0.0f;
 float GoalLocationZ = -10.0f;
 
 bool isAnimating = false; // 애니메이션 진행 상태를 나타내는 플래그
+
+
+// AABB 정의 (구체를 감싸는 AABB)
+struct AABB {
+	glm::vec3 min;  // 최소점
+	glm::vec3 max;  // 최대점
+};
+
+// 깃대의 충돌박스를 계산하는 함수
+glm::vec3 goalBoxMin, goalBoxMax;
+
+bool checkAABBCollision(const AABB& a, const AABB& b);
+AABB createGolfBallAABB(const glm::vec3& center, float radius);
+void checkCollision();
 
 
 int main(int argc, char** argv)
@@ -322,7 +340,7 @@ GLvoid drawScene() {
 
 
 	// 깃대 생성
-	glm::mat4 GoalTransForm = glm::mat4(1.0f);
+	GoalTransForm = glm::mat4(1.0f);
 	GoalTransForm = glm::translate(GoalTransForm, glm::vec3(GoalLocationX, GoalLocationY, GoalLocationZ));
 	GoalTransForm = glm::scale(GoalTransForm, glm::vec3(0.05f, 2.0f, 0.01f));
 
@@ -400,6 +418,53 @@ GLvoid TimerFunc(int x) {
 	// 카메라도 공을 따라 이동
 	cameraPos = spherePosition + cameraOffset;
 
+	// 충돌 검사 함수 호출
+	checkCollision();
+
 	glutTimerFunc(10, TimerFunc, 1); // 타이머 설정
 	glutPostRedisplay(); // 화면 갱신
+}
+
+// 깃대 AABB
+void updateGoalBoundingBox(glm::mat4 GoalTransForm) {
+	// 스케일 정보를 추출하여 충돌 박스 크기 계산
+	glm::vec3 scale = glm::vec3(GoalTransForm[0][0], GoalTransForm[1][1], GoalTransForm[2][2]);
+
+	// 이동 정보를 추출하여 충돌 박스 위치 계산
+	glm::vec3 position = glm::vec3(GoalTransForm[3][0], GoalTransForm[3][1], GoalTransForm[3][2]);
+
+	// 충돌 박스 최소, 최대 값 계산
+	goalBoxMin = position - scale / 2.0f;  // 크기의 절반을 빼면 최소점
+	goalBoxMax = position + scale / 2.0f;  // 크기의 절반을 더하면 최대점
+}
+
+// 두 AABB 간 충돌을 검사하는 함수
+bool checkAABBCollision(const AABB& a, const AABB& b) {
+	if (a.max.x < b.min.x || a.min.x > b.max.x) return false;
+	if (a.max.y < b.min.y || a.min.y > b.max.y) return false;
+	if (a.max.z < b.min.z || a.min.z > b.max.z) return false;
+	return true;
+}
+
+// 골프공의 AABB 생성
+AABB createGolfBallAABB(const glm::vec3& center, float radius) {
+	AABB aabb;
+	aabb.min = center - glm::vec3(radius, radius, radius);
+	aabb.max = center + glm::vec3(radius, radius, radius);
+	return aabb;
+}
+
+void checkCollision() {
+	// 골프공 AABB 생성 (현재 위치를 사용)
+	float golfBallRadius = 0.05f; // 골프공의 반지름
+	AABB golfBallAABB = createGolfBallAABB(spherePosition, golfBallRadius);
+
+	// 깃대 AABB 갱신
+	updateGoalBoundingBox(GoalTransForm); // GoalTransform을 기반으로 goalBoxMin, goalBoxMax 업데이트
+	AABB goalAABB = { goalBoxMin, goalBoxMax };
+
+	// 충돌 검사
+	if (checkAABBCollision(golfBallAABB, goalAABB)) {
+		std::cout << "충돌 발생!" << std::endl;
+	}
 }
