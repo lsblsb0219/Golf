@@ -104,6 +104,8 @@ void make_vertexShaders();
 void make_fragmentShaders();
 GLuint make_shaderProgram();
 void checkCollision();
+void restrictTargetPosition();
+void resetBallPosition();
 
 GLchar* vertexSource, * fragmentSource;
 GLuint shaderID;
@@ -141,9 +143,13 @@ bool isAnimating = false;
 // -------- 충돌 --------
 bool isCollisionDetected = false; // 충돌 상태 추적 변수
 
-// 육면체 상단 경계
-float boundaryMinX = -0.95f, boundaryMaxX = 0.95f;   // X축 최소/최대값
-float boundaryMinZ = -10.3f, boundaryMaxZ = 0.45f;  // Z축 최소/최대값
+// 스테이지별 경계값
+float stage1BoundaryMinX = -0.95f, stage1BoundaryMaxX = 0.95f;
+float stage1BoundaryMinZ = -10.3f, stage1BoundaryMaxZ = 0.45f;
+
+float stage2BoundaryMaxX = 2.0f;
+float stage2BoundaryMinZ = -7.0f, stage2BoundaryMaxZ = 7.0f;
+
 float boundaryY = 0.55f;  // Y축 고정값 (육면체 상단)
 
 // AABB 정의 (구체를 감싸는 AABB)
@@ -151,13 +157,11 @@ struct AABB {
 	glm::vec3 min;  // 최소점
 	glm::vec3 max;  // 최대점
 };
-
-// 깃대의 충돌박스를 계산하는 함수
+// 충돌 박스 변수
 glm::vec3 goalBoxMin, goalBoxMax;
-
+// 깃대의 충돌박스를 계산하는 함수
 bool checkAABBCollision(const AABB& a, const AABB& b);
 AABB createGolfBallAABB(const glm::vec3& center, float radius);
-
 void checkCollision();
 
 // -------- 맵 --------
@@ -378,7 +382,7 @@ GLvoid drawScene() {
 	gluQuadricNormals(qobj, GLU_SMOOTH); // 부드러운 노멀
 	gluQuadricOrientation(qobj, GLU_OUTSIDE); // 외부 방향 설정(이러면 카메라가 구 밖에서 구 표면을 보게 됨)
 	gluSphere(qobj, 0.05, 50, 50); // 반지름 0.05, 50개의 세그먼트와 스택
-	
+
 
 	glutSwapBuffers();
 }
@@ -426,11 +430,8 @@ GLvoid KeyBoard(unsigned char key, int x, int y) {
 		exit(-1);
 	}
 
-	// 목표 위치가 경계를 넘지 않도록 제한
-	if (targetPosition.x < boundaryMinX) targetPosition.x = boundaryMinX;
-	if (targetPosition.x > boundaryMaxX) targetPosition.x = boundaryMaxX;
-	if (targetPosition.z < boundaryMinZ) targetPosition.z = boundaryMinZ;
-	if (targetPosition.z > boundaryMaxZ) targetPosition.z = boundaryMaxZ;
+	// 스테이지별 경계 제한
+	restrictTargetPosition();
 
 	targetPosition.y = boundaryY; // Y축 고정
 
@@ -466,10 +467,7 @@ GLvoid TimerFunc(int x) {
 		spherePosition += direction * moveSpeed;
 
 		// 경계 조건 적용
-		if (spherePosition.x < boundaryMinX) spherePosition.x = boundaryMinX;
-		if (spherePosition.x > boundaryMaxX) spherePosition.x = boundaryMaxX;
-		if (spherePosition.z < boundaryMinZ) spherePosition.z = boundaryMinZ;
-		if (spherePosition.z > boundaryMaxZ) spherePosition.z = boundaryMaxZ;
+		restrictTargetPosition();
 		spherePosition.y = boundaryY; // Y축 고정
 
 		// 목표 위치를 넘어가지 않도록 클램핑
@@ -535,9 +533,40 @@ void checkCollision() {
 	if (checkAABBCollision(golfBallAABB, goalAABB)) {
 		std::cout << "충돌 발생!" << std::endl;
 		currentMapStage++;
-		spherePosition.x = 0.0f;
-		spherePosition.y = 0.55f;
-		spherePosition.z = 0.0f;
+		if (currentMapStage > 4) {
+			currentMapStage = 1; // 마지막 스테이지 이후 처음으로 돌아감
+		}
+		resetBallPosition(); // 공 위치 초기화
 		isCollisionDetected = true;
 	}
+}
+
+// 목표 위치 경계 제한 함수
+void restrictTargetPosition() {
+	if (currentMapStage == 1) {
+		if (targetPosition.x < stage1BoundaryMinX) targetPosition.x = stage1BoundaryMinX;
+		if (targetPosition.x > stage1BoundaryMaxX) targetPosition.x = stage1BoundaryMaxX;
+		if (targetPosition.z < stage1BoundaryMinZ) targetPosition.z = stage1BoundaryMinZ;
+		if (targetPosition.z > stage1BoundaryMaxZ) targetPosition.z = stage1BoundaryMaxZ;
+	}
+	else if (currentMapStage == 2) {
+		if (targetPosition.x <= stage1BoundaryMaxX) {
+			if (targetPosition.x < stage1BoundaryMinX) targetPosition.x = stage1BoundaryMinX;
+			if (targetPosition.z < stage1BoundaryMinZ) targetPosition.z = stage1BoundaryMinZ;
+			if (targetPosition.z > stage1BoundaryMaxZ) targetPosition.z = stage1BoundaryMaxZ;
+		}
+		else {
+			if (targetPosition.x > stage2BoundaryMaxX) targetPosition.x = stage2BoundaryMaxX;
+			if (targetPosition.z < stage2BoundaryMinZ) targetPosition.z = stage2BoundaryMinZ;
+			if (targetPosition.z > stage2BoundaryMaxZ) targetPosition.z = stage2BoundaryMaxZ;
+		}
+	}
+}
+
+void resetBallPosition() {
+	// 공의 초기 위치로 복구
+	spherePosition = glm::vec3(0.0f, 0.55f, 0.0f);
+	targetPosition = spherePosition; // 목표 위치도 초기화
+	cameraPos = spherePosition + cameraOffset; // 카메라 위치도 초기화
+	isCollisionDetected = false; // 충돌 상태 초기화
 }
