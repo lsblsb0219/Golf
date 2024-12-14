@@ -236,9 +236,12 @@ void InitBuffer()
 }
 
 bool hFlag = false;
-bool wFlag = true;
+bool yFlag = true;
 
 float yAngle{};
+
+// 구의 초기 위치를 저장하는 변수
+glm::vec3 spherePosition(0.0f, 2.0f, 2.5f);
 
 GLvoid drawScene() {
 
@@ -249,7 +252,7 @@ GLvoid drawScene() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     hFlag ? glDisable(GL_DEPTH_TEST) : glEnable(GL_DEPTH_TEST);//은면제거
-    wFlag ? glPolygonMode(GL_FRONT_AND_BACK, GL_FILL) : glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);//와이어 객체
+    yFlag ? glPolygonMode(GL_FRONT_AND_BACK, GL_FILL) : glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);//와이어 객체
 
     unsigned int modelLocation = glGetUniformLocation(shaderID, "modelTransform");//월드 변환 행렬값을 셰이더의 uniform mat4 modelTransform에게 넘겨줌
     unsigned int viewLocation = glGetUniformLocation(shaderID, "viewTransform");//위와 동일
@@ -283,7 +286,7 @@ GLvoid drawScene() {
 
     // 구를 위한 변환 행렬
     glm::mat4 sphereModel = glm::mat4(1.0f);
-    sphereModel = glm::translate(sphereModel, glm::vec3(0.0f, 2.0f, 2.5f));
+    sphereModel = glm::translate(sphereModel, spherePosition); // 구의 위치를 변수로 설정
     glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(sphereModel));
     glUniform1i(isSphereLocation, 1); // 구일 때, isSphere을 1로 설정
     glUniform3f(sphereColorLocation, 1.0f, 1.0f, 1.0f); // 구 색상
@@ -312,8 +315,20 @@ GLvoid KeyBoard(unsigned char key, int x, int y) {
     case 'h':
         hFlag = 1 - hFlag;//토글 방식
         break;
+    case 'y':
+        yFlag = !yFlag;//토글 방식
+        break;
     case 'w':
-        wFlag = !wFlag;//토글 방식
+        spherePosition.z -= 0.1f;
+        break;
+    case 'a':
+        spherePosition.x -= 0.1f;
+        break;
+    case's':
+        spherePosition.z += 0.1f;
+        break;
+    case'd':
+        spherePosition.x += 0.1f;
         break;
     default:
         exit(-1);
