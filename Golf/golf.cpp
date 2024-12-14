@@ -123,6 +123,8 @@ glm::vec3 spherePosition(0.0f, 0.55f, 0.0f); // 구의 초기 위치를 저장하는 변수
 glm::vec3 targetPosition = spherePosition; // 목표 위치
 float moveSpeed = 0.02f; // 이동 속도
 
+// 애니메이션 진행 상태를 나타내는 플래그
+bool isAnimating = false;
 
 // -------- 카메라 --------
 glm::vec3 cameraOffset(0.0f, 0.3f, 0.5f); // 공과 카메라 사이의 고정 거리 (위, 뒤)
@@ -136,8 +138,7 @@ float GoalLocationX = 0.0f;
 float GoalLocationY = 0.0f;
 float GoalLocationZ = 0.0f;
 
-// 애니메이션 진행 상태를 나타내는 플래그
-bool isAnimating = false;
+bool Stage3State = false; // 깃대 움직임 상태
 
 // -------- 충돌 --------
 bool isCollisionDetected1 = false; // 충돌 상태 추적 변수
@@ -371,9 +372,11 @@ GLvoid drawScene() {
 		glDrawArrays(GL_QUADS, 0, 24); // 정육면체
 
 		// 깃대 생성
-		GoalLocationX = 2.0f;
-		GoalLocationY = 0.5f;
-		GoalLocationZ = -15.0f;
+		if ((currentMapStage == 3 && !Stage3State) || (currentMapStage == 2)) {
+			GoalLocationX = 2.0f;
+			GoalLocationY = 0.5f;
+			GoalLocationZ = -15.0f;
+		}
 
 		GoalTransForm = glm::mat4(1.0f);
 		GoalTransForm = glm::translate(GoalTransForm, glm::vec3(GoalLocationX, GoalLocationY, GoalLocationZ));
@@ -383,10 +386,12 @@ GLvoid drawScene() {
 		glDrawArrays(GL_QUADS, 0, 24);
 
 		if (currentMapStage == 3) {
-			if (spherePosition.x <= -8.5f) {
+			if (Stage3State || spherePosition.x <= -8.5f) {
 				GoalLocationX = 0.0f;
 				GoalLocationY = 0.5f;
 				GoalLocationZ = 0.0f;
+
+				Stage3State = true; // 깃대 이동했다는 상태
 			}
 		}
 	}
