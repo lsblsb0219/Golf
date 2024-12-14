@@ -639,6 +639,10 @@ void checkCollision() {
 		}
 
 		currentMapStage++;
+		spherePosition.x = 0.0f;
+		spherePosition.y = 0.55f;
+		spherePosition.z = 0.0f;
+
 		if (currentMapStage > 4) {
 			currentMapStage = 1; // 마지막 스테이지 이후 처음으로 돌아감
 		}
