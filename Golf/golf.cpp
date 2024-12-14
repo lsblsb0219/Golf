@@ -109,8 +109,6 @@ void InitBuffer();
 void make_vertexShaders();
 void make_fragmentShaders();
 GLuint make_shaderProgram();
-bool checkAABBCollision(const AABB& a, const AABB& b);
-AABB createGolfBallAABB(const glm::vec3& center, float radius);
 void checkCollision();
 
 GLchar* vertexSource, * fragmentSource;
