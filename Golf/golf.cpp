@@ -478,18 +478,35 @@ GLvoid KeyBoard(unsigned char key, int x, int y) {
 	case '4':
 		move_len = 2.0f;
 		break;
+	case 'W':
 	case 'w':
 		targetPosition.z -= move_len; // 목표 위치 갱신
 		break;
+	case 'A':
 	case 'a':
 		targetPosition.x -= move_len; // 목표 위치 갱신
 		break;
+	case 'S':
 	case 's':
 		targetPosition.z += move_len; // 목표 위치 갱신
 		break;
+	case 'D':
 	case 'd':
 		targetPosition.x += move_len; // 목표 위치 갱신
 		break;
+	case 'R':
+	case 'r':
+		isAnimating = false;
+
+		spherePosition.x = 0.0f;
+		spherePosition.y = 0.55f;
+		spherePosition.z = 0.0f;
+
+		if (currentMapStage == 3) {
+			Stage3State = false;
+		}
+		break;
+	case 'Q':
 	case 'q':
 		exit(-1);
 	}
