@@ -161,7 +161,7 @@ AABB createGolfBallAABB(const glm::vec3& center, float radius);
 void checkCollision();
 
 // -------- 맵 --------
-int currentMapStage = 2; // 현재 맵 스테이지
+int currentMapStage = 3; // 현재 맵 스테이지
 
 // 이동 거리
 float move_len = 1.0f;
@@ -375,6 +375,14 @@ GLvoid drawScene() {
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(GoalTransForm));
 		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
 		glDrawArrays(GL_QUADS, 0, 24);
+
+		if (currentMapStage == 3) {
+			if (spherePosition.x <= -8.5f) {
+				GoalLocationX = 0.0f;
+				GoalLocationY = 0.5f;
+				GoalLocationZ = 0.0f;
+			}
+		}
 	}
 	else if (currentMapStage == 4) {
 		// 첫 번째 사각형
