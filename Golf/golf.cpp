@@ -105,7 +105,6 @@ void make_fragmentShaders();
 GLuint make_shaderProgram();
 void checkCollision();
 void restrictTargetPosition();
-void restrictToCombinedBounds(glm::vec3& position);
 
 GLchar* vertexSource, * fragmentSource;
 GLuint shaderID;
@@ -634,25 +633,15 @@ void restrictTargetPosition() {
 		if (targetPosition.z > stage1BoundaryMaxZ) targetPosition.z = stage1BoundaryMaxZ;
 	}
 	else if (currentMapStage == 2) {
-		// 정육면체 두 개의 경계 제한
-		restrictToCombinedBounds(targetPosition);
+		if (targetPosition.x <= stage1BoundaryMaxX) {
+			if (targetPosition.x < stage1BoundaryMinX) targetPosition.x = stage1BoundaryMinX;
+			if (targetPosition.z < stage1BoundaryMinZ) targetPosition.z = stage1BoundaryMinZ;
+			if (targetPosition.z > stage1BoundaryMaxZ) targetPosition.z = stage1BoundaryMaxZ;
+		}
+		else {
+			if (targetPosition.x > stage2BoundaryMaxX) targetPosition.x = stage2BoundaryMaxX;
+			if (targetPosition.z < stage2BoundaryMinZ) targetPosition.z = stage2BoundaryMinZ;
+			if (targetPosition.z > stage2BoundaryMaxZ) targetPosition.z = stage2BoundaryMaxZ;
+		}
 	}
-}
-
-void restrictToCombinedBounds(glm::vec3& position) {
-	// 정육면체 전체 경계
-	glm::vec3 combinedMin(-1.0f, -0.5f, -10.5f); // 최소점
-	glm::vec3 combinedMax(3.0f, 0.5f, 0.5f);    // 최대점
-
-	// X축 경계 제한
-	if (position.x < combinedMin.x) position.x = combinedMin.x;
-	if (position.x > combinedMax.x) position.x = combinedMax.x;
-
-	// Y축 경계 제한
-	if (position.y < combinedMin.y) position.y = combinedMin.y;
-	if (position.y > combinedMax.y) position.y = combinedMax.y;
-
-	// Z축 경계 제한
-	if (position.z < combinedMin.z) position.z = combinedMin.z;
-	if (position.z > combinedMax.z) position.z = combinedMax.z;
 }
