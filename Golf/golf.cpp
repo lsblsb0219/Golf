@@ -99,13 +99,20 @@ float vertexColor[] = {
 
 };//정육면체, 축,정사면체 색깔들
 
+// ------- 기타 선언 함수 --------
 void InitBuffer();
 void make_vertexShaders();
 void make_fragmentShaders();
 GLuint make_shaderProgram();
 void checkCollision();
 void restrictTargetPosition();
+void resetBallPosition();
+void updateObstaclePosition();
+void checkObstacleCollision();
+void drawRectangle(float x, float y, float width, float height, float r, float g, float b);
 
+
+// ------- OpenGL 객체 --------
 GLchar* vertexSource, * fragmentSource;
 GLuint shaderID;
 GLuint vertexShader;
@@ -140,6 +147,15 @@ float GoalLocationZ = 0.0f;
 
 bool Stage3State = false; // 깃대 움직임 상태
 
+// -------- 장애물 --------
+glm::vec3 obstacle1Position(2.32f, 0.55f, -10.0f); // 장애물 1의 초기 위치
+glm::vec3 obstacle2Position(0.85f, 0.55f, -3.0f); // 장애물 2의 초기 위치
+float obstacleMoveSpeed = 0.02f; // 장애물 이동 속도
+float obstacleMoveRange = 1.0f; // 장애물 이동 범위
+bool obstacle1MovingRight = true; // 장애물 1 이동 방향
+bool obstacle2MovingRight = false; // 장애물 2 이동 방향
+
+
 // -------- 충돌 --------
 bool isCollisionDetected1 = false; // 충돌 상태 추적 변수
 bool isCollisionDetected2 = false;
@@ -172,6 +188,8 @@ int currentMapStage = 2; // 현재 맵 스테이지
 
 // 이동 거리
 float move_len = 1.0f;
+
+
 
 int main(int argc, char** argv)
 {
@@ -279,26 +297,24 @@ void InitBuffer()
 	glGenBuffers(2, VBO); //--- 2개의 VBO를 지정하고 할당하기
 
 
-	glBindVertexArray(VAO); //--- VAO를 바인드하기
-	//--- 1번째 VBO를 활성화하여 바인드하고, 버텍스 속성 (좌표값)을 저장
+	glBindVertexArray(VAO);
+
 	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
-	//--- 변수 diamond 에서 버텍스 데이터 값을 버퍼에 복사한다.
-	//--- triShape 배열의 사이즈: 9 * float
+
 	glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(vertexPosition), vertexPosition, GL_STATIC_DRAW);
 
 
-	//--- 좌표값을 attribute 인덱스 0번에 명시한다: 버텍스 당 3* float
+
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	//--- attribute 인덱스 0번을 사용가능하게 함
+
 	glEnableVertexAttribArray(0);
-	//--- 2번째 VBO를 활성화 하여 바인드 하고, 버텍스 속성 (색상)을 저장
+
 	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
-	//--- 변수 colors에서 버텍스 색상을 복사한다.
-	//--- colors 배열의 사이즈: 9 *float 
+
 	glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(vertexColor), vertexColor, GL_STATIC_DRAW);
-	//--- 색상값을 attribute 인덱스 1번에 명시한다: 버텍스 당 3*float
+
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	//--- attribute 인덱스 1번을 사용 가능하게 함.
+
 	glEnableVertexAttribArray(1);
 
 }
@@ -385,6 +401,22 @@ GLvoid drawScene() {
 		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
 		glDrawArrays(GL_QUADS, 0, 24);
 
+		// 장애물 1 렌더링
+		glm::mat4 obstacle1Transform = glm::mat4(1.0f);
+		obstacle1Transform = glm::translate(obstacle1Transform, obstacle1Position);
+		obstacle1Transform = glm::scale(obstacle1Transform, glm::vec3(0.2f, 0.5f, 0.1f));
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(obstacle1Transform));
+		glUniform1i(isSphereLocation, 0); // 직육면체로 설정
+		glDrawArrays(GL_QUADS, 0, 24);
+
+		// 장애물 2 렌더링
+		glm::mat4 obstacle2Transform = glm::mat4(1.0f);
+		obstacle2Transform = glm::translate(obstacle2Transform, obstacle2Position);
+		obstacle2Transform = glm::scale(obstacle2Transform, glm::vec3(0.3f, 0.5f, 0.07f));
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(obstacle2Transform));
+		glUniform1i(isSphereLocation, 0); // 직육면체로 설정
+		glDrawArrays(GL_QUADS, 0, 24);
+
 		if (currentMapStage == 3) {
 			if (Stage3State || spherePosition.x <= -8.5f) {
 				GoalLocationX = 0.0f;
@@ -402,7 +434,7 @@ GLvoid drawScene() {
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(shapeTransForm));//변환 행렬을 셰이더에 전달
 		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
 		glDrawArrays(GL_QUADS, 0, 24); //정육면체
-	
+
 		// 두 번째 사각형(절벽 아래)
 		glm::mat4 shapeTransForm2 = glm::mat4(1.0f); // 기본 변환 행렬 생성
 		shapeTransForm2 = glm::rotate(shapeTransForm2, glm::radians(yAngle), glm::vec3(0.0, 1.0, 0.0)); // y축 회전
@@ -430,7 +462,7 @@ GLvoid drawScene() {
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(FakeGoalTransForm));
 		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
 		glDrawArrays(GL_QUADS, 0, 24);
-	
+
 	}
 
 
@@ -449,7 +481,15 @@ GLvoid drawScene() {
 	gluQuadricNormals(qobj, GLU_SMOOTH); // 부드러운 노멀
 	gluQuadricOrientation(qobj, GLU_OUTSIDE); // 외부 방향 설정(이러면 카메라가 구 밖에서 구 표면을 보게 됨)
 	gluSphere(qobj, 0.05, 50, 50); // 반지름 0.05, 50개의 세그먼트와 스택
-	
+
+
+	// 사각형 1: move_len
+	float rectHeight1 = move_len * 0.5f; // 이동 거리에 비례
+	drawRectangle(1.85f, -.9f, 0.05f, rectHeight1, 1.0f, 0.0f, 0.0f); // 빨간색
+
+	// 사각형 2: moveSpeed
+	float rectHeight2 = moveSpeed * 10.0f; // 속도에 비례
+	drawRectangle(1.95f, -0.9f, 0.05f, rectHeight2, 0.0f, 0.0f, 1.0f); // 파란색
 
 	glutSwapBuffers();
 }
@@ -544,6 +584,12 @@ GLvoid SpecialKeyBoard(int key, int x, int y) {
 		yAngle = yAngle + 1.f;
 		if (yAngle > 360)yAngle = 0.f;
 		break;
+	case GLUT_KEY_UP:
+		moveSpeed += 0.05f;
+		break;
+	case GLUT_KEY_DOWN:
+		moveSpeed -= 0.05f;
+		break;
 	}
 	glutPostRedisplay();
 }
@@ -567,6 +613,12 @@ GLvoid TimerFunc(int x) {
 
 	// 카메라도 공을 따라 이동
 	cameraPos = spherePosition + cameraOffset;
+
+	// 장애물 위치 업데이트
+	updateObstaclePosition();
+
+	// 장애물과 충돌 검사
+	checkObstacleCollision();
 
 	// 충돌 검사 함수 호출
 	checkCollision();
@@ -608,7 +660,7 @@ void checkCollision() {
 	if (currentMapStage == 1 && isCollisionDetected1) {
 		return; // 충돌이 이미 발생했으면 추가적인 충돌 처리 안 함
 	}
-	else if(currentMapStage == 2 && isCollisionDetected2) {
+	else if (currentMapStage == 2 && isCollisionDetected2) {
 		return; // 충돌이 이미 발생했으면 추가적인 충돌 처리 안 함
 	}
 	else if (currentMapStage == 3 && isCollisionDetected3) {
@@ -631,26 +683,26 @@ void checkCollision() {
 		std::cout << "충돌 발생!" << std::endl;
 		if (currentMapStage == 1) {
 			isCollisionDetected1 = true;
+			resetBallPosition();
 		}
 		else if (currentMapStage == 2) {
 			isCollisionDetected2 = true;
+			resetBallPosition();
 		}
 		else if (currentMapStage == 3) {
 			isCollisionDetected3 = true;
+			resetBallPosition();
 		}
 		else if (currentMapStage == 4) {
 			isCollisionDetected4 = true;
+			resetBallPosition();
 		}
 
 		currentMapStage++;
-		spherePosition.x = 0.0f;
-		spherePosition.y = 0.55f;
-		spherePosition.z = 0.0f;
 
 		if (currentMapStage > 4) {
 			currentMapStage = 1; // 마지막 스테이지 이후 처음으로 돌아감
 		}
-		//resetBallPosition(); // 공 위치 초기화
 	}
 }
 
@@ -692,6 +744,85 @@ void restrictTargetPosition() {
 		else {
 			state = 0;
 		}
-		
+	}*/
+}
+
+void resetBallPosition() {
+	spherePosition = glm::vec3(0.0f, 0.55f, 0.0f);
+	targetPosition = spherePosition;
+	cameraPos = spherePosition + cameraOffset;
+	isAnimating = false;
+}
+
+// 장애물 위치 업데이트
+void updateObstaclePosition() {
+	// 장애물 1 좌우 이동
+	if (obstacle1MovingRight) {
+		obstacle1Position.x += obstacleMoveSpeed;
+		if (obstacle1Position.x > 2.0f + obstacleMoveRange) obstacle1MovingRight = false;
 	}
+	else {
+		obstacle1Position.x -= obstacleMoveSpeed;
+		if (obstacle1Position.x < 2.0f - obstacleMoveRange) obstacle1MovingRight = true;
+	}
+
+	// 장애물 2 좌우 이동
+	if (obstacle2MovingRight) {
+		obstacle2Position.x += obstacleMoveSpeed;
+		if (obstacle2Position.x > 0.0f + obstacleMoveRange) obstacle2MovingRight = false;
+	}
+	else {
+		obstacle2Position.x -= obstacleMoveSpeed;
+		if (obstacle2Position.x < 0.0f - obstacleMoveRange) obstacle2MovingRight = true;
+	}
+}
+
+// 장애물과 충돌 검사
+void checkObstacleCollision() {
+	// 장애물 AABB 생성
+	AABB obstacle1AABB = createGolfBallAABB(obstacle1Position, 0.2f);
+	AABB obstacle2AABB = createGolfBallAABB(obstacle2Position, 0.2f);
+
+	// 공의 AABB 생성
+	float golfBallRadius = 0.05f;
+	AABB golfBallAABB = createGolfBallAABB(spherePosition, golfBallRadius);
+
+	// 장애물 1과 충돌 검사
+	if (checkAABBCollision(golfBallAABB, obstacle1AABB)) {
+		spherePosition.z += move_len - 0.2f; // 공을 뒤로 밀기
+		targetPosition = spherePosition; // 목표 위치 갱신
+		isAnimating = false;
+	}
+
+	// 장애물 2와 충돌 검사
+	if (checkAABBCollision(golfBallAABB, obstacle2AABB)) {
+		spherePosition.z += move_len - 0.2f; // 공을 뒤로 밀기
+		targetPosition = spherePosition; // 목표 위치 갱신
+		isAnimating = false;
+	}
+}
+
+// 사각형을 그리는 함수
+void drawRectangle(float x, float y, float width, float height, float r, float g, float b) {
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0); // 화면 좌표로 설정
+
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+
+	glColor3f(r, g, b); // 색상 설정
+	glBegin(GL_QUADS);
+	glVertex2f(x, y);                     // 좌하단
+	glVertex2f(x + width, y);            // 우하단
+	glVertex2f(x + width, y + height);   // 우상단
+	glVertex2f(x, y + height);           // 좌상단
+	glEnd();
+
+	glPopMatrix();
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
 }
