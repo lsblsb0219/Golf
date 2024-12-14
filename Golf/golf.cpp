@@ -9,16 +9,11 @@
 #include <Windows.h>
 #include <time.h>
 
-GLvoid drawScene();
-GLvoid KeyBoard(unsigned char key, int x, int y);
-GLvoid SpecialKeyBoard(int key, int x, int y);
-GLvoid Reshape(int w, int h);
-GLvoid TimerFunc(int x);
-
-void InitBuffer();
-void make_vertexShaders();
-void make_fragmentShaders();
-GLuint make_shaderProgram();
+// AABB 정의 (구체를 감싸는 AABB)
+struct AABB {
+	glm::vec3 min;  // 최소점
+	glm::vec3 max;  // 최대점
+};
 
 char* filetobuf(const char* file)
 {
@@ -104,11 +99,24 @@ float vertexColor[] = {
 
 };//정육면체, 축,정사면체 색깔들
 
+GLvoid drawScene();
+GLvoid KeyBoard(unsigned char key, int x, int y);
+GLvoid SpecialKeyBoard(int key, int x, int y);
+GLvoid Reshape(int w, int h);
+GLvoid TimerFunc(int x);
+
+void InitBuffer();
+void make_vertexShaders();
+void make_fragmentShaders();
+GLuint make_shaderProgram();
+bool checkAABBCollision(const AABB& a, const AABB& b);
+AABB createGolfBallAABB(const glm::vec3& center, float radius);
+void checkCollision();
+
 GLchar* vertexSource, * fragmentSource;
 GLuint shaderID;
 GLuint vertexShader;
 GLuint fragmentShader;
-
 GLuint VAO, VBO[2];
 
 bool hFlag = false;
@@ -118,7 +126,6 @@ float yAngle{};
 
 // 구의 초기 위치를 저장하는 변수
 glm::vec3 spherePosition(0.0f, 0.55f, 0.0f);
-
 glm::vec3 targetPosition = spherePosition; // 목표 위치
 float moveSpeed = 0.02f; // 이동 속도
 
@@ -134,27 +141,19 @@ float GoalLocationX = 0.0f;
 float GoalLocationY = 0.0f;
 float GoalLocationZ = -10.0f;
 
-bool isAnimating = false; // 애니메이션 진행 상태를 나타내는 플래그
+// 애니메이션 진행 상태를 나타내는 플래그
+bool isAnimating = false;
 
 // 육면체 상단 경계
 float boundaryMinX = -0.95f, boundaryMaxX = 0.95f;   // X축 최소/최대값
 float boundaryMinZ = -10.3f, boundaryMaxZ = 0.45f;  // Z축 최소/최대값
 float boundaryY = 0.55f;  // Y축 고정값 (육면체 상단)
 
-
-// AABB 정의 (구체를 감싸는 AABB)
-struct AABB {
-	glm::vec3 min;  // 최소점
-	glm::vec3 max;  // 최대점
-};
-
 // 깃대의 충돌박스를 계산하는 함수
 glm::vec3 goalBoxMin, goalBoxMax;
 
-bool checkAABBCollision(const AABB& a, const AABB& b);
-AABB createGolfBallAABB(const glm::vec3& center, float radius);
-void checkCollision();
-
+// 이동 거리
+float move_len = 1.0f;
 
 int main(int argc, char** argv)
 {
@@ -371,17 +370,29 @@ GLvoid KeyBoard(unsigned char key, int x, int y) {
 	case 'y':
 		yFlag = !yFlag; // 토글 방식
 		break;
+	case '1':
+		move_len = 0.5f;
+		break;
+	case '2':
+		move_len = 1.0f;
+		break;
+	case '3':
+		move_len = 1.5f;
+		break;
+	case '4':
+		move_len = 2.0f;
+		break;
 	case 'w':
-		targetPosition.z -= 1.5f; // 목표 위치 갱신
+		targetPosition.z -= move_len; // 목표 위치 갱신
 		break;
 	case 'a':
-		targetPosition.x -= 1.5f; // 목표 위치 갱신
+		targetPosition.x -= move_len; // 목표 위치 갱신
 		break;
 	case 's':
-		targetPosition.z += 1.5f; // 목표 위치 갱신
+		targetPosition.z += move_len; // 목표 위치 갱신
 		break;
 	case 'd':
-		targetPosition.x += 1.5f; // 목표 위치 갱신
+		targetPosition.x += move_len; // 목표 위치 갱신
 		break;
 	default:
 		exit(-1);
