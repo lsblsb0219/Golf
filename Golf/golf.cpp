@@ -99,12 +99,6 @@ float vertexColor[] = {
 
 };//정육면체, 축,정사면체 색깔들
 
-GLvoid drawScene();
-GLvoid KeyBoard(unsigned char key, int x, int y);
-GLvoid SpecialKeyBoard(int key, int x, int y);
-GLvoid Reshape(int w, int h);
-GLvoid TimerFunc(int x);
-
 void InitBuffer();
 void make_vertexShaders();
 void make_fragmentShaders();
