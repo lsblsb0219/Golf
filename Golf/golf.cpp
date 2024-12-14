@@ -123,7 +123,7 @@ glm::vec3 targetPosition = spherePosition; // 목표 위치
 float moveSpeed = 0.02f; // 이동 속도
 
 // 카메라 변환용 변수
-glm::vec3 cameraOffset(0.0f, 0.4f, 0.6f); // 공과 카메라 사이의 고정 거리 (위, 뒤)
+glm::vec3 cameraOffset(0.0f, 0.3f, 0.5f); // 공과 카메라 사이의 고정 거리 (위, 뒤)
 glm::vec3 cameraPos = spherePosition + cameraOffset; // 초기 카메라 위치
 glm::vec3 initialCameraDir = glm::normalize(-cameraOffset); // 공을 바라보는 초기 방향
 
@@ -135,6 +135,11 @@ float GoalLocationY = 0.0f;
 float GoalLocationZ = -10.0f;
 
 bool isAnimating = false; // 애니메이션 진행 상태를 나타내는 플래그
+
+// 육면체 상단 경계
+float boundaryMinX = -0.95f, boundaryMaxX = 0.95f;   // X축 최소/최대값
+float boundaryMinZ = -10.3f, boundaryMaxZ = 0.45f;  // Z축 최소/최대값
+float boundaryY = 0.55f;  // Y축 고정값 (육면체 상단)
 
 
 // AABB 정의 (구체를 감싸는 AABB)
@@ -367,24 +372,37 @@ GLvoid KeyBoard(unsigned char key, int x, int y) {
 		yFlag = !yFlag; // 토글 방식
 		break;
 	case 'w':
-		targetPosition.z -= 1.5f; // 목표 위치 업데이트
-		isAnimating = true; // 애니메이션 시작
+		targetPosition.z -= 1.5f; // 목표 위치 갱신
 		break;
 	case 'a':
-		targetPosition.x -= 1.5f; // 목표 위치 업데이트
-		isAnimating = true; // 애니메이션 시작
+		targetPosition.x -= 1.5f; // 목표 위치 갱신
 		break;
 	case 's':
-		targetPosition.z += 1.5f; // 목표 위치 업데이트
-		isAnimating = true; // 애니메이션 시작
+		targetPosition.z += 1.5f; // 목표 위치 갱신
 		break;
 	case 'd':
-		targetPosition.x += 1.5f; // 목표 위치 업데이트
-		isAnimating = true; // 애니메이션 시작
+		targetPosition.x += 1.5f; // 목표 위치 갱신
 		break;
 	default:
 		exit(-1);
 	}
+
+	// 목표 위치가 경계를 넘지 않도록 제한
+	if (targetPosition.x < boundaryMinX) targetPosition.x = boundaryMinX;
+	if (targetPosition.x > boundaryMaxX) targetPosition.x = boundaryMaxX;
+	if (targetPosition.z < boundaryMinZ) targetPosition.z = boundaryMinZ;
+	if (targetPosition.z > boundaryMaxZ) targetPosition.z = boundaryMaxZ;
+
+	targetPosition.y = boundaryY; // Y축 고정
+
+	// 목표 위치와 현재 위치가 동일하면 애니메이션 종료
+	if (glm::distance(spherePosition, targetPosition) < 0.01f) {
+		isAnimating = false;
+	}
+	else {
+		isAnimating = true; // 애니메이션 시작
+	}
+
 	glutPostRedisplay();
 }
 
@@ -407,6 +425,13 @@ GLvoid TimerFunc(int x) {
 	if (glm::distance(spherePosition, targetPosition) > 0.01f) {
 		glm::vec3 direction = glm::normalize(targetPosition - spherePosition);
 		spherePosition += direction * moveSpeed;
+
+		// 경계 조건 적용
+		if (spherePosition.x < boundaryMinX) spherePosition.x = boundaryMinX;
+		if (spherePosition.x > boundaryMaxX) spherePosition.x = boundaryMaxX;
+		if (spherePosition.z < boundaryMinZ) spherePosition.z = boundaryMinZ;
+		if (spherePosition.z > boundaryMaxZ) spherePosition.z = boundaryMaxZ;
+		spherePosition.y = boundaryY; // Y축 고정
 
 		// 목표 위치를 넘어가지 않도록 클램핑
 		if (glm::distance(spherePosition, targetPosition) < moveSpeed) {
