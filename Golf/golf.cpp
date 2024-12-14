@@ -139,7 +139,10 @@ float GoalLocationZ = 0.0f;
 bool isAnimating = false;
 
 // -------- 충돌 --------
-bool isCollisionDetected = false; // 충돌 상태 추적 변수
+bool isCollisionDetected1 = false; // 충돌 상태 추적 변수
+bool isCollisionDetected2 = false;
+bool isCollisionDetected3 = false;
+bool isCollisionDetected4 = false;
 
 // 육면체 상단 경계
 float boundaryMinX = -0.95f, boundaryMaxX = 0.95f;   // X축 최소/최대값
@@ -161,7 +164,7 @@ AABB createGolfBallAABB(const glm::vec3& center, float radius);
 void checkCollision();
 
 // -------- 맵 --------
-int currentMapStage = 3; // 현재 맵 스테이지
+int currentMapStage = 1; // 현재 맵 스테이지
 
 // 이동 거리
 float move_len = 1.0f;
@@ -559,7 +562,16 @@ AABB createGolfBallAABB(const glm::vec3& center, float radius) {
 }
 
 void checkCollision() {
-	if (isCollisionDetected) {
+	if (currentMapStage == 1 && isCollisionDetected1) {
+		return; // 충돌이 이미 발생했으면 추가적인 충돌 처리 안 함
+	}
+	else if(currentMapStage == 2 && isCollisionDetected2) {
+		return; // 충돌이 이미 발생했으면 추가적인 충돌 처리 안 함
+	}
+	else if (currentMapStage == 3 && isCollisionDetected3) {
+		return; // 충돌이 이미 발생했으면 추가적인 충돌 처리 안 함
+	}
+	else if (currentMapStage == 4 && isCollisionDetected4) {
 		return; // 충돌이 이미 발생했으면 추가적인 충돌 처리 안 함
 	}
 
@@ -574,10 +586,23 @@ void checkCollision() {
 	// 충돌 검사
 	if (checkAABBCollision(golfBallAABB, goalAABB)) {
 		std::cout << "충돌 발생!" << std::endl;
+		if (currentMapStage == 1) {
+			isCollisionDetected1 = true;
+		}
+		else if (currentMapStage == 2) {
+			isCollisionDetected2 = true;
+		}
+		else if (currentMapStage == 3) {
+			isCollisionDetected3 = true;
+		}
+		else if (currentMapStage == 4) {
+			isCollisionDetected4 = true;
+		}
+
 		currentMapStage++;
 		spherePosition.x = 0.0f;
 		spherePosition.y = 0.55f;
 		spherePosition.z = 0.0f;
-		isCollisionDetected = true;
+		
 	}
 }
