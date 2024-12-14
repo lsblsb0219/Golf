@@ -99,14 +99,6 @@ float vertexColor[] = {
 
 };//정육면체, 축,정사면체 색깔들
 
-// 장애물 색상 (빨간색)
-float obstacleColor[] = {
-	1.0f, 0.0f, 0.0f, // 빨간색
-	1.0f, 0.0f, 0.0f,
-	1.0f, 0.0f, 0.0f,
-	1.0f, 0.0f, 0.0f
-};
-
 // ------- 기타 선언 함수 --------
 void InitBuffer();
 void make_vertexShaders();
@@ -194,6 +186,8 @@ int currentMapStage = 2; // 현재 맵 스테이지
 
 // 이동 거리
 float move_len = 1.0f;
+
+
 
 int main(int argc, char** argv)
 {
@@ -408,7 +402,7 @@ GLvoid drawScene() {
 		// 장애물 1 렌더링
 		glm::mat4 obstacle1Transform = glm::mat4(1.0f);
 		obstacle1Transform = glm::translate(obstacle1Transform, obstacle1Position);
-		obstacle1Transform = glm::scale(obstacle1Transform, glm::vec3(0.2f, 0.5f, 0.2f));
+		obstacle1Transform = glm::scale(obstacle1Transform, glm::vec3(0.2f, 0.5f, 0.1f));
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(obstacle1Transform));
 		glUniform1i(isSphereLocation, 0); // 직육면체로 설정
 		glDrawArrays(GL_QUADS, 0, 24);
@@ -416,7 +410,7 @@ GLvoid drawScene() {
 		// 장애물 2 렌더링
 		glm::mat4 obstacle2Transform = glm::mat4(1.0f);
 		obstacle2Transform = glm::translate(obstacle2Transform, obstacle2Position);
-		obstacle2Transform = glm::scale(obstacle2Transform, glm::vec3(0.1f, 0.5f, 0.1f));
+		obstacle2Transform = glm::scale(obstacle2Transform, glm::vec3(0.3f, 0.5f, 0.07f));
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(obstacle2Transform));
 		glUniform1i(isSphereLocation, 0); // 직육면체로 설정
 		glDrawArrays(GL_QUADS, 0, 24);
@@ -575,6 +569,12 @@ GLvoid SpecialKeyBoard(int key, int x, int y) {
 	case GLUT_KEY_RIGHT:
 		yAngle = yAngle + 1.f;
 		if (yAngle > 360)yAngle = 0.f;
+		break;
+	case GLUT_KEY_UP:
+		moveSpeed += 0.05f;
+		break;
+	case GLUT_KEY_DOWN:
+		moveSpeed -= 0.05f;
 		break;
 	}
 	glutPostRedisplay();
@@ -756,7 +756,6 @@ void checkObstacleCollision() {
 
 	// 장애물 1과 충돌 검사
 	if (checkAABBCollision(golfBallAABB, obstacle1AABB)) {
-		std::cout << "장애물 1과 충돌!" << std::endl;
 		spherePosition.z += move_len - 0.2f; // 공을 뒤로 밀기
 		targetPosition = spherePosition; // 목표 위치 갱신
 		isAnimating = false;
@@ -764,7 +763,6 @@ void checkObstacleCollision() {
 
 	// 장애물 2와 충돌 검사
 	if (checkAABBCollision(golfBallAABB, obstacle2AABB)) {
-		std::cout << "장애물 2와 충돌!" << std::endl;
 		spherePosition.z += move_len - 0.2f; // 공을 뒤로 밀기
 		targetPosition = spherePosition; // 목표 위치 갱신
 		isAnimating = false;
