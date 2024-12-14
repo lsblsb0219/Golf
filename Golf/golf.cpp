@@ -588,7 +588,9 @@ GLvoid SpecialKeyBoard(int key, int x, int y) {
 		moveSpeed += 0.05f;
 		break;
 	case GLUT_KEY_DOWN:
-		moveSpeed -= 0.05f;
+		if (moveSpeed - 0.05f >= 0.0f) {
+			moveSpeed -= 0.05f;
+		}
 		break;
 	}
 	glutPostRedisplay();
@@ -744,7 +746,7 @@ void restrictTargetPosition() {
 		else {
 			state = 0;
 		}
-	}*/
+	}
 }
 
 void resetBallPosition() {
