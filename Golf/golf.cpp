@@ -105,6 +105,7 @@ void make_fragmentShaders();
 GLuint make_shaderProgram();
 void checkCollision();
 void restrictTargetPosition();
+void resetBallPosition();
 
 GLchar* vertexSource, * fragmentSource;
 GLuint shaderID;
@@ -627,26 +628,26 @@ void checkCollision() {
 		std::cout << "충돌 발생!" << std::endl;
 		if (currentMapStage == 1) {
 			isCollisionDetected1 = true;
+			resetBallPosition();
 		}
 		else if (currentMapStage == 2) {
 			isCollisionDetected2 = true;
+			resetBallPosition();
 		}
 		else if (currentMapStage == 3) {
 			isCollisionDetected3 = true;
+			resetBallPosition();
 		}
 		else if (currentMapStage == 4) {
 			isCollisionDetected4 = true;
+			resetBallPosition();
 		}
 
 		currentMapStage++;
-		spherePosition.x = 0.0f;
-		spherePosition.y = 0.55f;
-		spherePosition.z = 0.0f;
 
 		if (currentMapStage > 4) {
 			currentMapStage = 1; // 마지막 스테이지 이후 처음으로 돌아감
 		}
-		//resetBallPosition(); // 공 위치 초기화
 	}
 }
 
@@ -659,7 +660,7 @@ void restrictTargetPosition() {
 		if (targetPosition.z > stage1BoundaryMaxZ) targetPosition.z = stage1BoundaryMaxZ;
 	}
 	else if (currentMapStage == 2) {
-		if (targetPosition.x <= stage1BoundaryMaxX) {
+		/*if (targetPosition.x <= stage1BoundaryMaxX) {
 			if (targetPosition.x < stage1BoundaryMinX) targetPosition.x = stage1BoundaryMinX;
 			if (targetPosition.z < stage1BoundaryMinZ) targetPosition.z = stage1BoundaryMinZ;
 			if (targetPosition.z > stage1BoundaryMaxZ) targetPosition.z = stage1BoundaryMaxZ;
@@ -668,6 +669,13 @@ void restrictTargetPosition() {
 			if (targetPosition.x > stage2BoundaryMaxX) targetPosition.x = stage2BoundaryMaxX;
 			if (targetPosition.z < stage2BoundaryMinZ) targetPosition.z = stage2BoundaryMinZ;
 			if (targetPosition.z > stage2BoundaryMaxZ) targetPosition.z = stage2BoundaryMaxZ;
-		}
+		}*/
 	}
+}
+
+void resetBallPosition() {
+	spherePosition = glm::vec3(0.0f, 0.55f, 0.0f);
+	targetPosition = spherePosition;
+	cameraPos = spherePosition + cameraOffset;
+	isAnimating = FALSE;
 }
