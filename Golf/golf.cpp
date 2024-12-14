@@ -109,6 +109,8 @@ void restrictTargetPosition();
 void resetBallPosition();
 void updateObstaclePosition();
 void checkObstacleCollision();
+void drawRectangle(float x, float y, float width, float height, float r, float g, float b);
+
 
 // ------- OpenGL 객체 --------
 GLchar* vertexSource, * fragmentSource;
@@ -481,6 +483,14 @@ GLvoid drawScene() {
 	gluSphere(qobj, 0.05, 50, 50); // 반지름 0.05, 50개의 세그먼트와 스택
 
 
+	// 사각형 1: move_len
+	float rectHeight1 = move_len * 0.5f; // 이동 거리에 비례
+	drawRectangle(1.85f, -.9f, 0.05f, rectHeight1, 1.0f, 0.0f, 0.0f); // 빨간색
+
+	// 사각형 2: moveSpeed
+	float rectHeight2 = moveSpeed * 10.0f; // 속도에 비례
+	drawRectangle(1.95f, -0.9f, 0.05f, rectHeight2, 0.0f, 0.0f, 1.0f); // 파란색
+
 	glutSwapBuffers();
 }
 
@@ -767,4 +777,29 @@ void checkObstacleCollision() {
 		targetPosition = spherePosition; // 목표 위치 갱신
 		isAnimating = false;
 	}
+}
+
+// 사각형을 그리는 함수
+void drawRectangle(float x, float y, float width, float height, float r, float g, float b) {
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0); // 화면 좌표로 설정
+
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+
+	glColor3f(r, g, b); // 색상 설정
+	glBegin(GL_QUADS);
+	glVertex2f(x, y);                     // 좌하단
+	glVertex2f(x + width, y);            // 우하단
+	glVertex2f(x + width, y + height);   // 우상단
+	glVertex2f(x, y + height);           // 좌상단
+	glEnd();
+
+	glPopMatrix();
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
 }
