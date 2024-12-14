@@ -161,7 +161,7 @@ AABB createGolfBallAABB(const glm::vec3& center, float radius);
 void checkCollision();
 
 // -------- 맵 --------
-int currentMapStage = 1; // 현재 맵 스테이지
+int currentMapStage = 4; // 현재 맵 스테이지
 
 // 이동 거리
 float move_len = 1.0f;
@@ -360,6 +360,23 @@ GLvoid drawScene() {
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(shapeTransForm2)); // 변환 행렬을 셰이더에 전달
 		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
 		glDrawArrays(GL_QUADS, 0, 24); // 정육면체
+	}
+	else if (currentMapStage == 4) {
+		// 첫 번째 사각형
+		glm::mat4 shapeTransForm = glm::mat4(1.0f);//변환 행렬 생성 T
+		shapeTransForm = glm::rotate(shapeTransForm, glm::radians(yAngle), glm::vec3(0.0, 1.0, 0.0));//y축 회전
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(shapeTransForm));//변환 행렬을 셰이더에 전달
+		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
+		glDrawArrays(GL_QUADS, 0, 24); //정육면체
+	
+		// 두 번째 사각형(절벽 아래)
+		glm::mat4 shapeTransForm2 = glm::mat4(1.0f); // 기본 변환 행렬 생성
+		shapeTransForm2 = glm::rotate(shapeTransForm2, glm::radians(yAngle), glm::vec3(0.0, 1.0, 0.0)); // y축 회전
+		shapeTransForm2 = glm::translate(shapeTransForm2, glm::vec3(0.0f, -2.0f, -10.5f)); // 아래쪽으로 이동
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(shapeTransForm2)); // 변환 행렬을 셰이더에 전달
+		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
+		glDrawArrays(GL_QUADS, 0, 24); // 정육면체
+	
 	}
 
 
