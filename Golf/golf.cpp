@@ -148,10 +148,10 @@ bool isCollisionDetected4 = false;
 
 // 스테이지별 경계값
 float stage1BoundaryMinX = -0.95f, stage1BoundaryMaxX = 0.95f;
-float stage1BoundaryMinZ = -10.3f, stage1BoundaryMaxZ = 0.45f;
+float stage1BoundaryMinZ = -10.45f, stage1BoundaryMaxZ = 0.45f;
 
-float stage2BoundaryMaxX = 2.0f;
-float stage2BoundaryMinZ = -7.0f, stage2BoundaryMaxZ = 7.0f;
+float stage2BoundaryMinX = 1.05f, stage2BoundaryMaxX = 2.95f;
+float stage2BoundaryMinZ = -15.45f, stage2BoundaryMaxZ = -4.55f;
 
 float boundaryY = 0.55f;  // Y축 고정값 (육면체 상단)
 
@@ -168,7 +168,7 @@ AABB createGolfBallAABB(const glm::vec3& center, float radius);
 void checkCollision();
 
 // -------- 맵 --------
-int currentMapStage = 1; // 현재 맵 스테이지
+int currentMapStage = 2; // 현재 맵 스테이지
 
 // 이동 거리
 float move_len = 1.0f;
@@ -459,6 +459,7 @@ GLvoid Reshape(int w, int h)
 	glViewport(0, 0, w, h);
 }
 
+int state = 0;
 GLvoid KeyBoard(unsigned char key, int x, int y) {
 	if (isAnimating) return; // 애니메이션 중이면 입력 무시
 
@@ -508,6 +509,9 @@ GLvoid KeyBoard(unsigned char key, int x, int y) {
 		if (currentMapStage == 3) {
 			Stage3State = false;
 		}
+		break;
+	case 'p':
+		printf("x : %.2f, y : %.2f, z : %.2f, state = %d\n", targetPosition.x, targetPosition.y, targetPosition.z, state);
 		break;
 	case 'Q':
 	case 'q':
@@ -659,15 +663,35 @@ void restrictTargetPosition() {
 		if (targetPosition.z > stage1BoundaryMaxZ) targetPosition.z = stage1BoundaryMaxZ;
 	}
 	else if (currentMapStage == 2) {
-		if (targetPosition.x <= stage1BoundaryMaxX) {
+		if (targetPosition.z >= -4.5f) {
 			if (targetPosition.x < stage1BoundaryMinX) targetPosition.x = stage1BoundaryMinX;
-			if (targetPosition.z < stage1BoundaryMinZ) targetPosition.z = stage1BoundaryMinZ;
+			if (targetPosition.x > stage1BoundaryMaxX) targetPosition.x = stage1BoundaryMaxX;
 			if (targetPosition.z > stage1BoundaryMaxZ) targetPosition.z = stage1BoundaryMaxZ;
+			state = 1;
 		}
-		else {
+		else if (targetPosition.x < 1.0f && targetPosition.z >= -10.5f){
+			if (targetPosition.x < 2.0f && targetPosition.z >= -15.0f){
+				if (targetPosition.x < stage1BoundaryMinX) targetPosition.x = stage1BoundaryMinX;
+				if (targetPosition.z < stage1BoundaryMinZ) targetPosition.z = stage1BoundaryMinZ;
+				state = 2;
+			}
+		}
+		else if (targetPosition.x >= 1.0f && targetPosition.z >= -10.5f) {
+			if (targetPosition.z >= -15.0f){
+				if (targetPosition.x > stage2BoundaryMaxX) targetPosition.x = stage2BoundaryMaxX;
+				if (targetPosition.z > stage2BoundaryMaxZ) targetPosition.z = stage2BoundaryMaxZ;
+				state = 3;
+			}
+		}
+		else if (targetPosition.z >= -20.0f) {
+			if (targetPosition.x < stage2BoundaryMinX) targetPosition.x = stage2BoundaryMinX;
 			if (targetPosition.x > stage2BoundaryMaxX) targetPosition.x = stage2BoundaryMaxX;
 			if (targetPosition.z < stage2BoundaryMinZ) targetPosition.z = stage2BoundaryMinZ;
-			if (targetPosition.z > stage2BoundaryMaxZ) targetPosition.z = stage2BoundaryMaxZ;
+			state = 4;
 		}
+		else {
+			state = 0;
+		}
+		
 	}
 }
