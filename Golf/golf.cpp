@@ -422,7 +422,7 @@ GLvoid KeyBoard(unsigned char key, int x, int y) {
 	case 'd':
 		targetPosition.x += move_len; // 목표 위치 갱신
 		break;
-	default:
+	case 'q':
 		exit(-1);
 	}
 
