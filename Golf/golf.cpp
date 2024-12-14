@@ -133,7 +133,7 @@ glm::mat4 GoalTransForm;
 
 float GoalLocationX = 0.0f;
 float GoalLocationY = 0.0f;
-float GoalLocationZ = -10.0f;
+float GoalLocationZ = 0.0f;
 
 // 애니메이션 진행 상태를 나타내는 플래그
 bool isAnimating = false;
@@ -161,7 +161,7 @@ AABB createGolfBallAABB(const glm::vec3& center, float radius);
 void checkCollision();
 
 // -------- 맵 --------
-int currentMapStage = 4; // 현재 맵 스테이지
+int currentMapStage = 2; // 현재 맵 스테이지
 
 // 이동 거리
 float move_len = 1.0f;
@@ -337,10 +337,13 @@ GLvoid drawScene() {
 		glDrawArrays(GL_QUADS, 0, 24); //정육면체
 
 		// 깃대 생성
+		GoalLocationX = 0.0f;
+		GoalLocationY = 0.5f;
+		GoalLocationZ = -10.0f;
+
 		GoalTransForm = glm::mat4(1.0f);
 		GoalTransForm = glm::translate(GoalTransForm, glm::vec3(GoalLocationX, GoalLocationY, GoalLocationZ));
 		GoalTransForm = glm::scale(GoalTransForm, glm::vec3(0.05f, 2.0f, 0.01f));
-
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(GoalTransForm));
 		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
 		glDrawArrays(GL_QUADS, 0, 24);
@@ -360,6 +363,18 @@ GLvoid drawScene() {
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(shapeTransForm2)); // 변환 행렬을 셰이더에 전달
 		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
 		glDrawArrays(GL_QUADS, 0, 24); // 정육면체
+
+		// 깃대 생성
+		GoalLocationX = 2.0f;
+		GoalLocationY = 0.5f;
+		GoalLocationZ = -15.0f;
+
+		GoalTransForm = glm::mat4(1.0f);
+		GoalTransForm = glm::translate(GoalTransForm, glm::vec3(GoalLocationX, GoalLocationY, GoalLocationZ));
+		GoalTransForm = glm::scale(GoalTransForm, glm::vec3(0.05f, 2.0f, 0.01f));
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(GoalTransForm));
+		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
+		glDrawArrays(GL_QUADS, 0, 24);
 	}
 	else if (currentMapStage == 4) {
 		// 첫 번째 사각형
