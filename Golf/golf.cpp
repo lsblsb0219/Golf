@@ -254,6 +254,8 @@ GLvoid drawScene() {
     unsigned int modelLocation = glGetUniformLocation(shaderID, "modelTransform");//월드 변환 행렬값을 셰이더의 uniform mat4 modelTransform에게 넘겨줌
     unsigned int viewLocation = glGetUniformLocation(shaderID, "viewTransform");//위와 동일
     unsigned int projectionLocation = glGetUniformLocation(shaderID, "projectionTransform");//위와 동일
+    unsigned int isSphereLocation = glGetUniformLocation(shaderID, "isSphere");
+    unsigned int sphereColorLocation = glGetUniformLocation(shaderID, "sphereColor");
 
     //원근 투영
     glm::mat4 kTransform = glm::mat4(1.0f);
@@ -270,15 +272,35 @@ GLvoid drawScene() {
     vTransform = glm::lookAt(cameraPos, cameraDirection, cameraUp);
     glUniformMatrix4fv(viewLocation, 1, GL_FALSE, &vTransform[0][0]);
 
+
+    // 맵 생성
     glm::mat4 shapeTransForm = glm::mat4(1.0f);//변환 행렬 생성 T
     shapeTransForm = glm::rotate(shapeTransForm, glm::radians(yAngle), glm::vec3(0.0, 1.0, 0.0));//y축 회전
     glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(shapeTransForm));//변환 행렬을 셰이더에 전달
-    
-
+    glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
     glDrawArrays(GL_QUADS, 0, 24); //정육면체
+
+
+    // 구를 위한 변환 행렬
+    glm::mat4 sphereModel = glm::mat4(1.0f);
+    sphereModel = glm::translate(sphereModel, glm::vec3(0.0f, 2.0f, 2.5f));
+    glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(sphereModel));
+    glUniform1i(isSphereLocation, 1); // 구일 때, isSphere을 1로 설정
+    glUniform3f(sphereColorLocation, 1.0f, 1.0f, 1.0f); // 구 색상
+
+
+    // GLU 구 생성 및 그리기
+    GLUquadricObj* qobj;
+    qobj = gluNewQuadric();
+    gluQuadricDrawStyle(qobj, GLU_FILL); // 스타일(와이어LINE, 면FILL)
+    gluQuadricNormals(qobj, GLU_SMOOTH); // 부드러운 노멀
+    gluQuadricOrientation(qobj, GLU_OUTSIDE); // 외부 방향 설정(이러면 카메라가 구 밖에서 구 표면을 보게 됨)
+    gluSphere(qobj, 0.05, 50, 50); // 반지름 10.05, 50개의 세그먼트와 스택
+
 
     glutSwapBuffers();
 }
+
 GLvoid Reshape(int w, int h)
 {
     glViewport(0, 0, w, h);
