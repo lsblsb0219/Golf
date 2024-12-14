@@ -8,6 +8,7 @@
 #include <gl/glm/glm/gtc/matrix_transform.hpp>
 #include <Windows.h>
 #include <time.h>
+#include <sstream>
 
 GLvoid drawScene();
 GLvoid KeyBoard(unsigned char key, int x, int y);
@@ -190,6 +191,10 @@ int currentMapStage = 3; // 현재 맵 스테이지
 float move_len = 1.0f;
 
 int state = 0;
+
+
+// -------- 글씨 --------
+void renderBitmapString(float x, float y, void* font, const char* string);
 
 
 int main(int argc, char** argv)
@@ -483,14 +488,27 @@ GLvoid drawScene() {
 	gluQuadricOrientation(qobj, GLU_OUTSIDE); // 외부 방향 설정(이러면 카메라가 구 밖에서 구 표면을 보게 됨)
 	gluSphere(qobj, 0.05, 50, 50); // 반지름 0.05, 50개의 세그먼트와 스택
 
-
+	renderBitmapString(0.5f, 0.8f, GLUT_BITMAP_HELVETICA_18, "key");
+	renderBitmapString(0.5f, 0.7f, GLUT_BITMAP_HELVETICA_18, "current");
 	// 사각형 1: move_len
 	float rectHeight1 = move_len * 0.5f; // 이동 거리에 비례
-	drawRectangle(1.85f, -.9f, 0.05f, rectHeight1, 1.0f, 0.0f, 0.0f); // 빨간색
+	drawRectangle(1.05f, 1.0f, 0.05f, rectHeight1, 1.0f, 0.0f, 0.0f); // 빨간색
+	// 텍스트 출력 (화면 위치, 글꼴, 텍스트 내용)
+	renderBitmapString(0.9f, 0.9f, GLUT_BITMAP_HELVETICA_18, "distance");
+	renderBitmapString(1.0f, 0.8f, GLUT_BITMAP_HELVETICA_18, "1~4");
+	std::ostringstream oss1;
+	oss1 << move_len;  // move_len 값을 텍스트로 변환
+	renderBitmapString(1.01f, 0.7f, GLUT_BITMAP_HELVETICA_18, oss1.str().c_str());
 
 	// 사각형 2: moveSpeed
 	float rectHeight2 = moveSpeed * 10.0f; // 속도에 비례
-	drawRectangle(1.95f, -0.9f, 0.05f, rectHeight2, 0.0f, 0.0f, 1.0f); // 파란색
+	drawRectangle(1.35f, 1.0f, 0.05f, rectHeight2, 0.0f, 0.0f, 1.0f); // 파란색
+	// 텍스트 출력 (화면 위치, 글꼴, 텍스트 내용)
+	renderBitmapString(1.3f, 0.9f, GLUT_BITMAP_HELVETICA_18, "speed");
+	renderBitmapString(1.3f, 0.8f, GLUT_BITMAP_HELVETICA_18, "updown");
+	std::ostringstream oss2;
+	oss2 << moveSpeed;  // moveSpeed 값을 텍스트로 변환
+	renderBitmapString(1.3f, 0.7f, GLUT_BITMAP_HELVETICA_18, oss2.str().c_str());
 
 	glutSwapBuffers();
 }
@@ -815,12 +833,20 @@ void drawRectangle(float x, float y, float width, float height, float r, float g
 	glBegin(GL_QUADS);
 	glVertex2f(x, y);                     // 좌하단
 	glVertex2f(x + width, y);            // 우하단
-	glVertex2f(x + width, y + height);   // 우상단
-	glVertex2f(x, y + height);           // 좌상단
+	glVertex2f(x + width, y + height/2);   // 우상단
+	glVertex2f(x, y + height/2);           // 좌상단
 	glEnd();
 
 	glPopMatrix();
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
 	glMatrixMode(GL_MODELVIEW);
+}
+
+// 텍스트를 그리는 함수
+void renderBitmapString(float x, float y, void* font, const char* string) {
+	glRasterPos2f(x, y);  // 텍스트 위치 설정
+	for (const char* c = string; *c != '\0'; c++) {
+		glutBitmapCharacter(font, *c);  // 각 문자 출력
+	}
 }
