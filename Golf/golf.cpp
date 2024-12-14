@@ -170,6 +170,9 @@ float stage1BoundaryMinZ = -10.45f, stage1BoundaryMaxZ = 0.45f;
 float stage2BoundaryMinX = 1.05f, stage2BoundaryMaxX = 2.95f;
 float stage2BoundaryMinZ = -15.45f, stage2BoundaryMaxZ = -4.55f;
 
+float stage4BoundaryMinX = -0.95f, stage4BoundaryMaxX = 0.95f;
+float stage4BoundaryMinZ = -10.45f, stage4BoundaryMaxZ = 0.45f;
+
 float boundaryY = 0.55f;  // Y축 고정값 (육면체 상단)
 
 // AABB 정의 (구체를 감싸는 AABB)
@@ -185,7 +188,7 @@ AABB createGolfBallAABB(const glm::vec3& center, float radius);
 void checkCollision();
 
 // -------- 맵 --------
-int currentMapStage = 3; // 현재 맵 스테이지
+int currentMapStage = 4; // 현재 맵 스테이지
 
 // 이동 거리
 float move_len = 1.0f;
@@ -488,14 +491,14 @@ GLvoid drawScene() {
 	gluQuadricOrientation(qobj, GLU_OUTSIDE); // 외부 방향 설정(이러면 카메라가 구 밖에서 구 표면을 보게 됨)
 	gluSphere(qobj, 0.05, 50, 50); // 반지름 0.05, 50개의 세그먼트와 스택
 
-	renderBitmapString(0.5f, 0.8f, GLUT_BITMAP_HELVETICA_18, "key");
+	renderBitmapString(0.67f, 0.8f, GLUT_BITMAP_HELVETICA_18, "key");
 	renderBitmapString(0.5f, 0.7f, GLUT_BITMAP_HELVETICA_18, "current");
 	// 사각형 1: move_len
 	float rectHeight1 = move_len * 0.5f; // 이동 거리에 비례
 	drawRectangle(1.05f, 1.0f, 0.05f, rectHeight1, 1.0f, 0.0f, 0.0f); // 빨간색
 	// 텍스트 출력 (화면 위치, 글꼴, 텍스트 내용)
 	renderBitmapString(0.9f, 0.9f, GLUT_BITMAP_HELVETICA_18, "distance");
-	renderBitmapString(1.0f, 0.8f, GLUT_BITMAP_HELVETICA_18, "1~4");
+	renderBitmapString(0.945f, 0.8f, GLUT_BITMAP_HELVETICA_18, "1  ~  4");
 	std::ostringstream oss1;
 	oss1 << move_len;  // move_len 값을 텍스트로 변환
 	renderBitmapString(1.01f, 0.7f, GLUT_BITMAP_HELVETICA_18, oss1.str().c_str());
@@ -505,7 +508,7 @@ GLvoid drawScene() {
 	drawRectangle(1.35f, 1.0f, 0.05f, rectHeight2, 0.0f, 0.0f, 1.0f); // 파란색
 	// 텍스트 출력 (화면 위치, 글꼴, 텍스트 내용)
 	renderBitmapString(1.3f, 0.9f, GLUT_BITMAP_HELVETICA_18, "speed");
-	renderBitmapString(1.3f, 0.8f, GLUT_BITMAP_HELVETICA_18, "updown");
+	renderBitmapString(1.32f, 0.8f, GLUT_BITMAP_HELVETICA_18, "up, down");
 	std::ostringstream oss2;
 	oss2 << moveSpeed;  // moveSpeed 값을 텍스트로 변환
 	renderBitmapString(1.3f, 0.7f, GLUT_BITMAP_HELVETICA_18, oss2.str().c_str());
@@ -730,22 +733,22 @@ void restrictTargetPosition() {
 		if (targetPosition.z < stage1BoundaryMinZ) targetPosition.z = stage1BoundaryMinZ;
 		if (targetPosition.z > stage1BoundaryMaxZ) targetPosition.z = stage1BoundaryMaxZ;
 	}
-	else if (currentMapStage == 2) {
+	else if (currentMapStage == 2 || currentMapStage == 3) {
 		if (targetPosition.z >= -4.5f) {
 			if (targetPosition.x < stage1BoundaryMinX) targetPosition.x = stage1BoundaryMinX;
 			if (targetPosition.x > stage1BoundaryMaxX) targetPosition.x = stage1BoundaryMaxX;
 			if (targetPosition.z > stage1BoundaryMaxZ) targetPosition.z = stage1BoundaryMaxZ;
 			state = 1;
 		}
-		else if (targetPosition.x < 1.0f && targetPosition.z >= -10.5f){
-			if (targetPosition.x < 2.0f && targetPosition.z >= -15.0f){
+		else if (targetPosition.x < 1.0f && targetPosition.z >= -10.5f) {
+			if (targetPosition.x < 2.0f && targetPosition.z >= -15.0f) {
 				if (targetPosition.x < stage1BoundaryMinX) targetPosition.x = stage1BoundaryMinX;
 				if (targetPosition.z < stage1BoundaryMinZ) targetPosition.z = stage1BoundaryMinZ;
 				state = 2;
 			}
 		}
 		else if (targetPosition.x >= 1.0f && targetPosition.z >= -10.5f) {
-			if (targetPosition.z >= -15.0f){
+			if (targetPosition.z >= -15.0f) {
 				if (targetPosition.x > stage2BoundaryMaxX) targetPosition.x = stage2BoundaryMaxX;
 				if (targetPosition.z > stage2BoundaryMaxZ) targetPosition.z = stage2BoundaryMaxZ;
 				state = 3;
@@ -759,6 +762,17 @@ void restrictTargetPosition() {
 		}
 		else {
 			state = 0;
+		}
+	}
+	else if (currentMapStage == 4) {
+		if (targetPosition.x < stage4BoundaryMinX) {
+			targetPosition.x = stage4BoundaryMinX;
+		}
+		if (targetPosition.x > stage4BoundaryMaxX) {
+			targetPosition.x = stage4BoundaryMaxX;
+		}
+		if (targetPosition.z > stage4BoundaryMaxZ) {
+			targetPosition.z = stage4BoundaryMaxZ;
 		}
 	}
 }
@@ -833,8 +847,8 @@ void drawRectangle(float x, float y, float width, float height, float r, float g
 	glBegin(GL_QUADS);
 	glVertex2f(x, y);                     // 좌하단
 	glVertex2f(x + width, y);            // 우하단
-	glVertex2f(x + width, y + height/2);   // 우상단
-	glVertex2f(x, y + height/2);           // 좌상단
+	glVertex2f(x + width, y + height / 2);   // 우상단
+	glVertex2f(x, y + height / 2);           // 좌상단
 	glEnd();
 
 	glPopMatrix();
