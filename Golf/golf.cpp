@@ -189,6 +189,7 @@ int currentMapStage = 3; // 현재 맵 스테이지
 // 이동 거리
 float move_len = 1.0f;
 
+int state = 0;
 
 
 int main(int argc, char** argv)
@@ -499,7 +500,6 @@ GLvoid Reshape(int w, int h)
 	glViewport(0, 0, w, h);
 }
 
-int state = 0;
 GLvoid KeyBoard(unsigned char key, int x, int y) {
 	if (isAnimating) return; // 애니메이션 중이면 입력 무시
 
@@ -540,11 +540,7 @@ GLvoid KeyBoard(unsigned char key, int x, int y) {
 		break;
 	case 'R':
 	case 'r':
-		isAnimating = false;
-
-		spherePosition.x = 0.0f;
-		spherePosition.y = 0.55f;
-		spherePosition.z = 0.0f;
+		resetBallPosition();
 
 		if (currentMapStage == 3) {
 			Stage3State = false;
