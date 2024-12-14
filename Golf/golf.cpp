@@ -184,7 +184,7 @@ AABB createGolfBallAABB(const glm::vec3& center, float radius);
 void checkCollision();
 
 // -------- 맵 --------
-int currentMapStage = 2; // 현재 맵 스테이지
+int currentMapStage = 3; // 현재 맵 스테이지
 
 // 이동 거리
 float move_len = 1.0f;
@@ -418,7 +418,7 @@ GLvoid drawScene() {
 		glDrawArrays(GL_QUADS, 0, 24);
 
 		if (currentMapStage == 3) {
-			if (Stage3State || spherePosition.x <= -8.5f) {
+			if (Stage3State || spherePosition.z <= -13.0f) {
 				GoalLocationX = 0.0f;
 				GoalLocationY = 0.5f;
 				GoalLocationZ = 0.0f;
