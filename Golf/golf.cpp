@@ -116,18 +116,19 @@ bool yFlag = true;
 
 float yAngle{};
 
-// 구의 초기 위치를 저장하는 변수
-glm::vec3 spherePosition(0.0f, 0.55f, 0.0f);
+// -------- 공 --------
+glm::vec3 spherePosition(0.0f, 0.55f, 0.0f); // 구의 초기 위치를 저장하는 변수
 
 glm::vec3 targetPosition = spherePosition; // 목표 위치
 float moveSpeed = 0.02f; // 이동 속도
 
-// 카메라 변환용 변수
+
+// -------- 카메라 --------
 glm::vec3 cameraOffset(0.0f, 0.3f, 0.5f); // 공과 카메라 사이의 고정 거리 (위, 뒤)
 glm::vec3 cameraPos = spherePosition + cameraOffset; // 초기 카메라 위치
 glm::vec3 initialCameraDir = glm::normalize(-cameraOffset); // 공을 바라보는 초기 방향
 
-// 골대
+// -------- 골대 --------
 glm::mat4 GoalTransForm;
 
 float GoalLocationX = 0.0f;
@@ -136,11 +137,13 @@ float GoalLocationZ = -10.0f;
 
 bool isAnimating = false; // 애니메이션 진행 상태를 나타내는 플래그
 
+// -------- 충돌 --------
+bool isCollisionDetected = false; // 충돌 상태 추적 변수
+
 // 육면체 상단 경계
 float boundaryMinX = -0.95f, boundaryMaxX = 0.95f;   // X축 최소/최대값
 float boundaryMinZ = -10.3f, boundaryMaxZ = 0.45f;  // Z축 최소/최대값
 float boundaryY = 0.55f;  // Y축 고정값 (육면체 상단)
-
 
 // AABB 정의 (구체를 감싸는 AABB)
 struct AABB {
@@ -153,7 +156,11 @@ glm::vec3 goalBoxMin, goalBoxMax;
 
 bool checkAABBCollision(const AABB& a, const AABB& b);
 AABB createGolfBallAABB(const glm::vec3& center, float radius);
+
 void checkCollision();
+
+// -------- 맵 --------
+int currentMapStage = 1; // 현재 맵 스테이지
 
 
 int main(int argc, char** argv)
@@ -318,13 +325,39 @@ GLvoid drawScene() {
 	vTransform = glm::lookAt(cameraPos, cameraDirection, cameraUp);
 	glUniformMatrix4fv(viewLocation, 1, GL_FALSE, &vTransform[0][0]);
 
-
 	// 맵 생성
-	glm::mat4 shapeTransForm = glm::mat4(1.0f);//변환 행렬 생성 T
-	shapeTransForm = glm::rotate(shapeTransForm, glm::radians(yAngle), glm::vec3(0.0, 1.0, 0.0));//y축 회전
-	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(shapeTransForm));//변환 행렬을 셰이더에 전달
-	glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
-	glDrawArrays(GL_QUADS, 0, 24); //정육면체
+	if (currentMapStage == 1) {
+		glm::mat4 shapeTransForm = glm::mat4(1.0f);//변환 행렬 생성 T
+		shapeTransForm = glm::rotate(shapeTransForm, glm::radians(yAngle), glm::vec3(0.0, 1.0, 0.0));//y축 회전
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(shapeTransForm));//변환 행렬을 셰이더에 전달
+		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
+		glDrawArrays(GL_QUADS, 0, 24); //정육면체
+
+		// 깃대 생성
+		GoalTransForm = glm::mat4(1.0f);
+		GoalTransForm = glm::translate(GoalTransForm, glm::vec3(GoalLocationX, GoalLocationY, GoalLocationZ));
+		GoalTransForm = glm::scale(GoalTransForm, glm::vec3(0.05f, 2.0f, 0.01f));
+
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(GoalTransForm));
+		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
+		glDrawArrays(GL_QUADS, 0, 24);
+	}
+	else if (currentMapStage == 2 || currentMapStage == 3) {
+		// 첫 번째 정육면체
+		glm::mat4 shapeTransForm = glm::mat4(1.0f); // 기본 변환 행렬 생성
+		shapeTransForm = glm::rotate(shapeTransForm, glm::radians(yAngle), glm::vec3(0.0, 1.0, 0.0)); // y축 회전
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(shapeTransForm)); // 변환 행렬을 셰이더에 전달
+		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
+		glDrawArrays(GL_QUADS, 0, 24); // 정육면체
+
+		// 두 번째 정육면체 (오른쪽에 배치)
+		glm::mat4 shapeTransForm2 = glm::mat4(1.0f); // 기본 변환 행렬 생성
+		shapeTransForm2 = glm::rotate(shapeTransForm2, glm::radians(yAngle), glm::vec3(0.0, 1.0, 0.0)); // y축 회전
+		shapeTransForm2 = glm::translate(shapeTransForm2, glm::vec3(2.0f, 0.0f, -5.0f)); // 오른쪽으로 이동
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(shapeTransForm2)); // 변환 행렬을 셰이더에 전달
+		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
+		glDrawArrays(GL_QUADS, 0, 24); // 정육면체
+	}
 
 
 	// 구를 위한 변환 행렬
@@ -342,16 +375,7 @@ GLvoid drawScene() {
 	gluQuadricNormals(qobj, GLU_SMOOTH); // 부드러운 노멀
 	gluQuadricOrientation(qobj, GLU_OUTSIDE); // 외부 방향 설정(이러면 카메라가 구 밖에서 구 표면을 보게 됨)
 	gluSphere(qobj, 0.05, 50, 50); // 반지름 0.05, 50개의 세그먼트와 스택
-
-
-	// 깃대 생성
-	GoalTransForm = glm::mat4(1.0f);
-	GoalTransForm = glm::translate(GoalTransForm, glm::vec3(GoalLocationX, GoalLocationY, GoalLocationZ));
-	GoalTransForm = glm::scale(GoalTransForm, glm::vec3(0.05f, 2.0f, 0.01f));
-
-	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(GoalTransForm));
-	glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
-	glDrawArrays(GL_QUADS, 0, 24);
+	
 
 	glutSwapBuffers();
 }
@@ -480,6 +504,10 @@ AABB createGolfBallAABB(const glm::vec3& center, float radius) {
 }
 
 void checkCollision() {
+	if (isCollisionDetected) {
+		return; // 충돌이 이미 발생했으면 추가적인 충돌 처리 안 함
+	}
+
 	// 골프공 AABB 생성 (현재 위치를 사용)
 	float golfBallRadius = 0.05f; // 골프공의 반지름
 	AABB golfBallAABB = createGolfBallAABB(spherePosition, golfBallRadius);
@@ -491,5 +519,10 @@ void checkCollision() {
 	// 충돌 검사
 	if (checkAABBCollision(golfBallAABB, goalAABB)) {
 		std::cout << "충돌 발생!" << std::endl;
+		currentMapStage++;
+		spherePosition.x = 0.0f;
+		spherePosition.y = 0.55f;
+		spherePosition.z = 0.0f;
+		isCollisionDetected = true;
 	}
 }
