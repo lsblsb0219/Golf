@@ -19,6 +19,7 @@ void InitBuffer();
 void make_vertexShaders();
 void make_fragmentShaders();
 GLuint make_shaderProgram();
+
 char* filetobuf(const char* file)
 {
     FILE* fptr;
@@ -108,6 +109,20 @@ GLuint shaderID;
 GLuint vertexShader;
 GLuint fragmentShader;
 
+GLuint VAO, VBO[2];
+
+bool hFlag = false;
+bool yFlag = true;
+
+float yAngle{};
+
+// 구의 초기 위치를 저장하는 변수
+glm::vec3 spherePosition(0.0f, 2.0f, 2.5f);
+
+glm::vec3 targetPosition = spherePosition; // 목표 위치
+float moveSpeed = 0.02f; // 이동 속도
+
+
 int main(int argc, char** argv)
 {
     srand(time(NULL));
@@ -131,6 +146,7 @@ int main(int argc, char** argv)
     make_fragmentShaders();
     shaderID = make_shaderProgram();
     InitBuffer();
+
     glutKeyboardFunc(KeyBoard);
     glutSpecialFunc(SpecialKeyBoard);
     glutTimerFunc(10, TimerFunc, 1);
@@ -138,6 +154,7 @@ int main(int argc, char** argv)
     glutReshapeFunc(Reshape);
     glutMainLoop();
 }
+
 void make_vertexShaders()
 {
     vertexSource = filetobuf("vertexShaderSource.glsl");
@@ -158,6 +175,7 @@ void make_vertexShaders()
         return;
     }
 }
+
 void make_fragmentShaders()
 {
     fragmentSource = filetobuf("fragmentShaderSource.glsl");
@@ -178,6 +196,7 @@ void make_fragmentShaders()
         return;
     }
 }
+
 GLuint make_shaderProgram()
 {
     GLuint ShaderProgramID;
@@ -204,7 +223,6 @@ GLuint make_shaderProgram()
     return ShaderProgramID;
 }
 
-GLuint VAO, VBO[2];
 void InitBuffer()
 {
     glGenVertexArrays(1, &VAO); //--- VAO 를 지정하고 할당하기
@@ -234,14 +252,6 @@ void InitBuffer()
     glEnableVertexAttribArray(1);
 
 }
-
-bool hFlag = false;
-bool yFlag = true;
-
-float yAngle{};
-
-// 구의 초기 위치를 저장하는 변수
-glm::vec3 spherePosition(0.0f, 2.0f, 2.5f);
 
 GLvoid drawScene() {
 
@@ -313,26 +323,25 @@ GLvoid KeyBoard(unsigned char key, int x, int y) {
 
     switch (key) {
     case 'h':
-        hFlag = 1 - hFlag;//토글 방식
+        hFlag = 1 - hFlag; // 토글 방식
         break;
     case 'y':
-        yFlag = !yFlag;//토글 방식
+        yFlag = !yFlag; // 토글 방식
         break;
     case 'w':
-        spherePosition.z -= 0.1f;
+        targetPosition.z -= 0.5f; // 목표 위치 업데이트
         break;
     case 'a':
-        spherePosition.x -= 0.1f;
+        targetPosition.x -= 0.5f; // 목표 위치 업데이트
         break;
-    case's':
-        spherePosition.z += 0.1f;
+    case 's':
+        targetPosition.z += 0.5f; // 목표 위치 업데이트
         break;
-    case'd':
-        spherePosition.x += 0.1f;
+    case 'd':
+        targetPosition.x += 0.5f; // 목표 위치 업데이트
         break;
     default:
         exit(-1);
-
     }
     glutPostRedisplay();
 }
@@ -352,12 +361,17 @@ GLvoid SpecialKeyBoard(int key, int x, int y) {
 }
 
 GLvoid TimerFunc(int x) {
-    switch (x)
-    {
-    case 1:        
-        break;
+    // 공이 목표 위치에 도달하지 않았으면 보간 처리
+    if (glm::distance(spherePosition, targetPosition) > 0.01f) {
+        glm::vec3 direction = glm::normalize(targetPosition - spherePosition);
+        spherePosition += direction * moveSpeed;
+
+        // 목표 위치를 넘어가지 않도록 클램핑
+        if (glm::distance(spherePosition, targetPosition) < moveSpeed) {
+            spherePosition = targetPosition;
+        }
     }
 
-    glutTimerFunc(10, TimerFunc, 1);
-    glutPostRedisplay();
+    glutTimerFunc(10, TimerFunc, 1); // 타이머 설정
+    glutPostRedisplay(); // 화면 갱신
 }
