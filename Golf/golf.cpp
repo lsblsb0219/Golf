@@ -125,6 +125,9 @@ float moveSpeed = 0.02f; // 이동 속도
 glm::vec3 cameraOffset(0.0f, 0.4f, 0.6f); // 공과 카메라 사이의 고정 거리 (위, 뒤)
 glm::vec3 cameraPos = spherePosition + cameraOffset; // 초기 카메라 위치
 glm::vec3 initialCameraDir = glm::normalize(-cameraOffset); // 공을 바라보는 초기 방향
+float GoalLocationX = 0.0f;
+float GoalLocationY = 0.0f;
+float GoalLocationZ = -10.0f;
 
 
 int main(int argc, char** argv)
@@ -306,14 +309,23 @@ GLvoid drawScene() {
 	glUniform3f(sphereColorLocation, 1.0f, 1.0f, 1.0f); // 구 색상
 
 
-	// GLU 구 생성 및 그리기
-	GLUquadricObj* qobj;
-	qobj = gluNewQuadric();
-	gluQuadricDrawStyle(qobj, GLU_FILL); // 스타일(와이어LINE, 면FILL)
-	gluQuadricNormals(qobj, GLU_SMOOTH); // 부드러운 노멀
-	gluQuadricOrientation(qobj, GLU_OUTSIDE); // 외부 방향 설정(이러면 카메라가 구 밖에서 구 표면을 보게 됨)
-	gluSphere(qobj, 0.05, 50, 50); // 반지름 10.05, 50개의 세그먼트와 스택
+    // GLU 구 생성 및 그리기
+    GLUquadricObj* qobj;
+    qobj = gluNewQuadric();
+    gluQuadricDrawStyle(qobj, GLU_FILL); // 스타일(와이어LINE, 면FILL)
+    gluQuadricNormals(qobj, GLU_SMOOTH); // 부드러운 노멀
+    gluQuadricOrientation(qobj, GLU_OUTSIDE); // 외부 방향 설정(이러면 카메라가 구 밖에서 구 표면을 보게 됨)
+    gluSphere(qobj, 0.05, 50, 50); // 반지름 0.05, 50개의 세그먼트와 스택
 
+
+    // 깃대 생성
+    glm::mat4 GoalTransForm = glm::mat4(1.0f);
+    GoalTransForm = glm::translate(GoalTransForm, glm::vec3(GoalLocationX, GoalLocationY, GoalLocationZ));
+    GoalTransForm = glm::scale(GoalTransForm, glm::vec3(0.05f, 2.0f, 0.01f));
+    
+    glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(GoalTransForm));
+    glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
+    glDrawArrays(GL_QUADS, 0, 24);
 
 	glutSwapBuffers();
 }
