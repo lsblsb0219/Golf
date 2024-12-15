@@ -170,6 +170,8 @@ float stage1BoundaryMinZ = -10.45f, stage1BoundaryMaxZ = 0.45f;
 float stage2BoundaryMinX = 1.05f, stage2BoundaryMaxX = 2.95f;
 float stage2BoundaryMinZ = -15.45f, stage2BoundaryMaxZ = -4.55f;
 
+float stage3BoundaryMinZ = -20.45f;
+
 float boundaryY = 0.55f;  // Y축 고정값 (육면체 상단)
 
 // AABB 정의 (구체를 감싸는 AABB)
@@ -185,7 +187,7 @@ AABB createGolfBallAABB(const glm::vec3& center, float radius);
 void checkCollision();
 
 // -------- 맵 --------
-int currentMapStage = 3; // 현재 맵 스테이지
+int currentMapStage = 4; // 현재 맵 스테이지
 
 // 이동 거리
 float move_len = 1.0f;
@@ -490,6 +492,7 @@ GLvoid drawScene() {
 
 	renderBitmapString(0.5f, 0.8f, GLUT_BITMAP_HELVETICA_18, "key");
 	renderBitmapString(0.5f, 0.7f, GLUT_BITMAP_HELVETICA_18, "current");
+	
 	// 사각형 1: move_len
 	float rectHeight1 = move_len * 0.5f; // 이동 거리에 비례
 	drawRectangle(1.05f, 1.0f, 0.05f, rectHeight1, 1.0f, 0.0f, 0.0f); // 빨간색
@@ -563,9 +566,6 @@ GLvoid KeyBoard(unsigned char key, int x, int y) {
 		if (currentMapStage == 3) {
 			Stage3State = false;
 		}
-		break;
-	case 'p':
-		printf("x : %.2f, y : %.2f, z : %.2f, state = %d\n", targetPosition.x, targetPosition.y, targetPosition.z, state);
 		break;
 	case 'Q':
 	case 'q':
@@ -725,41 +725,42 @@ void checkCollision() {
 // 목표 위치 경계 제한 함수
 void restrictTargetPosition() {
 	if (currentMapStage == 1) {
+		boundaryY = 0.55f;
 		if (targetPosition.x < stage1BoundaryMinX) targetPosition.x = stage1BoundaryMinX;
 		if (targetPosition.x > stage1BoundaryMaxX) targetPosition.x = stage1BoundaryMaxX;
 		if (targetPosition.z < stage1BoundaryMinZ) targetPosition.z = stage1BoundaryMinZ;
 		if (targetPosition.z > stage1BoundaryMaxZ) targetPosition.z = stage1BoundaryMaxZ;
 	}
-	else if (currentMapStage == 2) {
+	else if (currentMapStage == 2 || currentMapStage == 3) {
+		boundaryY = 0.55f;
 		if (targetPosition.z >= -4.5f) {
 			if (targetPosition.x < stage1BoundaryMinX) targetPosition.x = stage1BoundaryMinX;
 			if (targetPosition.x > stage1BoundaryMaxX) targetPosition.x = stage1BoundaryMaxX;
 			if (targetPosition.z > stage1BoundaryMaxZ) targetPosition.z = stage1BoundaryMaxZ;
-			state = 1;
 		}
 		else if (targetPosition.x < 1.0f && targetPosition.z >= -10.5f){
 			if (targetPosition.x < 2.0f && targetPosition.z >= -15.0f){
 				if (targetPosition.x < stage1BoundaryMinX) targetPosition.x = stage1BoundaryMinX;
 				if (targetPosition.z < stage1BoundaryMinZ) targetPosition.z = stage1BoundaryMinZ;
-				state = 2;
 			}
 		}
 		else if (targetPosition.x >= 1.0f && targetPosition.z >= -10.5f) {
 			if (targetPosition.z >= -15.0f){
 				if (targetPosition.x > stage2BoundaryMaxX) targetPosition.x = stage2BoundaryMaxX;
 				if (targetPosition.z > stage2BoundaryMaxZ) targetPosition.z = stage2BoundaryMaxZ;
-				state = 3;
 			}
 		}
 		else if (targetPosition.z >= -20.0f) {
 			if (targetPosition.x < stage2BoundaryMinX) targetPosition.x = stage2BoundaryMinX;
 			if (targetPosition.x > stage2BoundaryMaxX) targetPosition.x = stage2BoundaryMaxX;
 			if (targetPosition.z < stage2BoundaryMinZ) targetPosition.z = stage2BoundaryMinZ;
-			state = 4;
 		}
-		else {
-			state = 0;
-		}
+	}
+	else if (currentMapStage == 4) {
+		if (targetPosition.z < stage1BoundaryMinZ) boundaryY = -1.45f;
+		else boundaryY = 0.55f;
+		targetPosition.x = glm::clamp(targetPosition.x, stage1BoundaryMinX, stage1BoundaryMaxX);
+		targetPosition.z = glm::clamp(targetPosition.z, stage3BoundaryMinZ, stage1BoundaryMaxX);
 	}
 }
 
