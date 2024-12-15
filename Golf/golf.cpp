@@ -679,6 +679,10 @@ GLvoid KeyBoard(unsigned char key, int x, int y) {
 		break;
 	case 13: // 엔터 키
 		if (currentMapStage == 0) currentMapStage = saveMapStage;
+		else if (currentMapStage == 5) {
+			currentMapStage = 0; // 엔딩에서 타이틀로 이동
+			resetBallPosition();
+		}
 		break;
 	case 'W':
 	case 'w':
@@ -862,11 +866,6 @@ void checkCollision() {
 		}
 
 		currentMapStage++;
-
-		if (currentMapStage > 5) {
-			currentMapStage = 0; // 엔딩에서 타이틀로 이동
-			resetBallPosition();
-		}
 	}
 }
 
