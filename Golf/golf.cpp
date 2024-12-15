@@ -188,7 +188,7 @@ AABB createGolfBallAABB(const glm::vec3& center, float radius);
 void checkCollision();
 
 // -------- 맵 --------
-int currentMapStage = 4; // 현재 맵 스테이지
+int currentMapStage = 0; // 현재 맵 스테이지
 
 // 이동 거리
 float move_len = 1.0f;
@@ -367,7 +367,10 @@ GLvoid drawScene() {
 	glUniformMatrix4fv(viewLocation, 1, GL_FALSE, &vTransform[0][0]);
 
 	// 맵 생성
-	if (currentMapStage == 1) {
+	if (currentMapStage == 0) {
+
+	}
+	else if (currentMapStage == 1) {
 		glm::mat4 shapeTransForm = glm::mat4(1.0f);//변환 행렬 생성 T
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(shapeTransForm));//변환 행렬을 셰이더에 전달
 		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
@@ -609,6 +612,9 @@ GLvoid SpecialKeyBoard(int key, int x, int y) {
 		if (moveSpeed - 0.05f >= 0.0f) {
 			moveSpeed -= 0.05f;
 		}
+		break;
+	case 13: // 엔터 키
+		if (currentMapStage == 0) currentMapStage = 1;
 		break;
 	}
 	glutPostRedisplay();
