@@ -247,6 +247,8 @@ int hour = 0;
 
 bool TimeOn = false;
 
+int save_sec = 0, save_min = 0, save_hour = 0;
+
 int main(int argc, char** argv)
 {
 	srand(time(NULL));
@@ -596,6 +598,10 @@ GLvoid drawScene() {
 		glUniform1i(textureOnLocation, 0); // TextureOn을 비활성화
 		glDrawArrays(GL_QUADS, 0, 24);
 
+		save_hour = hour;
+		save_min = min;
+		save_sec = sec;
+
 	}
 	else if (currentMapStage == 5) {
 		TimeOn = false;
@@ -679,15 +685,15 @@ GLvoid drawScene() {
 		// 경과 시간 텍스트 출력
 		renderBitmapString(-2.0f, 1.3f, 0.5f, 0.005f, "Time: ");
 		std::ostringstream timeStream1;
-		timeStream1 << hour;
+		timeStream1 << save_hour;
 		renderBitmapString(-1.5f, 1.3f, 0.5f, 0.005f, timeStream1.str().c_str());
 		renderBitmapString(-1.3f, 1.3f, 0.5f, 0.005f, " : ");
 		std::ostringstream timeStream2;
-		timeStream2 << min;
+		timeStream2 << save_min;
 		renderBitmapString(-1.1f, 1.3f, 0.5f, 0.005f, timeStream2.str().c_str());
 		renderBitmapString(-0.9f, 1.3f, 0.5f, 0.005f, " : ");
 		std::ostringstream timeStream3;
-		timeStream3 << sec;
+		timeStream3 << save_sec;
 		renderBitmapString(-0.7f, 1.3f, 0.5f, 0.005f, timeStream3.str().c_str());
 	}
 
