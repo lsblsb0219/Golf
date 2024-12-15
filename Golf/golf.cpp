@@ -490,7 +490,7 @@ GLvoid drawScene() {
 	gluQuadricOrientation(qobj, GLU_OUTSIDE); // 외부 방향 설정(이러면 카메라가 구 밖에서 구 표면을 보게 됨)
 	gluSphere(qobj, 0.05, 50, 50); // 반지름 0.05, 50개의 세그먼트와 스택
 
-	renderBitmapString(0.5f, 0.8f, GLUT_BITMAP_HELVETICA_18, "key");
+	renderBitmapString(0.67f, 0.8f, GLUT_BITMAP_HELVETICA_18, "key");
 	renderBitmapString(0.5f, 0.7f, GLUT_BITMAP_HELVETICA_18, "current");
 	
 	// 사각형 1: move_len
@@ -498,7 +498,7 @@ GLvoid drawScene() {
 	drawRectangle(1.05f, 1.0f, 0.05f, rectHeight1, 1.0f, 0.0f, 0.0f); // 빨간색
 	// 텍스트 출력 (화면 위치, 글꼴, 텍스트 내용)
 	renderBitmapString(0.9f, 0.9f, GLUT_BITMAP_HELVETICA_18, "distance");
-	renderBitmapString(1.0f, 0.8f, GLUT_BITMAP_HELVETICA_18, "1~4");
+	renderBitmapString(0.945f, 0.8f, GLUT_BITMAP_HELVETICA_18, "1  ~  4");
 	std::ostringstream oss1;
 	oss1 << move_len;  // move_len 값을 텍스트로 변환
 	renderBitmapString(1.01f, 0.7f, GLUT_BITMAP_HELVETICA_18, oss1.str().c_str());
@@ -508,7 +508,7 @@ GLvoid drawScene() {
 	drawRectangle(1.35f, 1.0f, 0.05f, rectHeight2, 0.0f, 0.0f, 1.0f); // 파란색
 	// 텍스트 출력 (화면 위치, 글꼴, 텍스트 내용)
 	renderBitmapString(1.3f, 0.9f, GLUT_BITMAP_HELVETICA_18, "speed");
-	renderBitmapString(1.3f, 0.8f, GLUT_BITMAP_HELVETICA_18, "updown");
+	renderBitmapString(1.32f, 0.8f, GLUT_BITMAP_HELVETICA_18, "up, down");
 	std::ostringstream oss2;
 	oss2 << moveSpeed;  // moveSpeed 값을 텍스트로 변환
 	renderBitmapString(1.3f, 0.7f, GLUT_BITMAP_HELVETICA_18, oss2.str().c_str());
@@ -575,8 +575,6 @@ GLvoid KeyBoard(unsigned char key, int x, int y) {
 	// 스테이지별 경계 제한
 	restrictTargetPosition();
 
-	targetPosition.y = boundaryY; // Y축 고정
-
 	// 목표 위치와 현재 위치가 동일하면 애니메이션 종료
 	if (glm::distance(spherePosition, targetPosition) < 0.01f) {
 		isAnimating = false;
@@ -617,8 +615,7 @@ GLvoid TimerFunc(int x) {
 		spherePosition += direction * moveSpeed;
 
 		// 경계 조건 적용
-		restrictTargetPosition();
-		spherePosition.y = boundaryY; // Y축 고정
+		restrictTargetPosition(); // Y축 고정
 
 		// 목표 위치를 넘어가지 않도록 클램핑
 		if (glm::distance(spherePosition, targetPosition) < moveSpeed) {
@@ -630,11 +627,14 @@ GLvoid TimerFunc(int x) {
 	// 카메라도 공을 따라 이동
 	cameraPos = spherePosition + cameraOffset;
 
-	// 장애물 위치 업데이트
-	updateObstaclePosition();
 
-	// 장애물과 충돌 검사
-	checkObstacleCollision();
+	if (currentMapStage == 2 || currentMapStage == 3) {
+		// 장애물 위치 업데이트
+		updateObstaclePosition();
+
+		// 장애물과 충돌 검사
+		checkObstacleCollision();
+	}
 
 	// 충돌 검사 함수 호출
 	checkCollision();
@@ -738,14 +738,14 @@ void restrictTargetPosition() {
 			if (targetPosition.x > stage1BoundaryMaxX) targetPosition.x = stage1BoundaryMaxX;
 			if (targetPosition.z > stage1BoundaryMaxZ) targetPosition.z = stage1BoundaryMaxZ;
 		}
-		else if (targetPosition.x < 1.0f && targetPosition.z >= -10.5f){
-			if (targetPosition.x < 2.0f && targetPosition.z >= -15.0f){
+		else if (targetPosition.x < 1.0f && targetPosition.z >= -10.5f) {
+			if (targetPosition.x < 2.0f && targetPosition.z >= -15.0f) {
 				if (targetPosition.x < stage1BoundaryMinX) targetPosition.x = stage1BoundaryMinX;
 				if (targetPosition.z < stage1BoundaryMinZ) targetPosition.z = stage1BoundaryMinZ;
 			}
 		}
 		else if (targetPosition.x >= 1.0f && targetPosition.z >= -10.5f) {
-			if (targetPosition.z >= -15.0f){
+			if (targetPosition.z >= -15.0f) {
 				if (targetPosition.x > stage2BoundaryMaxX) targetPosition.x = stage2BoundaryMaxX;
 				if (targetPosition.z > stage2BoundaryMaxZ) targetPosition.z = stage2BoundaryMaxZ;
 			}
@@ -834,8 +834,8 @@ void drawRectangle(float x, float y, float width, float height, float r, float g
 	glBegin(GL_QUADS);
 	glVertex2f(x, y);                     // 좌하단
 	glVertex2f(x + width, y);            // 우하단
-	glVertex2f(x + width, y + height/2);   // 우상단
-	glVertex2f(x, y + height/2);           // 좌상단
+	glVertex2f(x + width, y + height / 2);   // 우상단
+	glVertex2f(x, y + height / 2);           // 좌상단
 	glEnd();
 
 	glPopMatrix();
