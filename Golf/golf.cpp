@@ -228,7 +228,7 @@ AABB createGolfBallAABB(const glm::vec3& center, float radius);
 void checkCollision();
 
 // -------- 맵 --------
-int currentMapStage = 0; // 현재 맵 스테이지
+int currentMapStage = 4; // 현재 맵 스테이지
 int saveMapStage = 1;
 
 // 이동 거리
@@ -371,6 +371,7 @@ void InitBuffer()
 
 	// 텍스처 로드
 	textureID[0] = LoadTexture("title.bmp");
+	textureID[1] = LoadTexture("ending.bmp");
 }
 
 GLuint LoadTexture(const char* filename)
@@ -458,7 +459,7 @@ GLvoid drawScene() {
 		vTransform = glm::lookAt(cameraPos, cameraDirection, cameraUp); // 원점을 평행하게 바라보는 카메라
 		glUniformMatrix4fv(viewLocation, 1, GL_FALSE, &vTransform[0][0]);
 		
-		// 타이틀
+		// 타이틀(배경)
 		glm::mat4 shapeTransForm = glm::mat4(1.0f);  // 변환 행렬 생성
 		shapeTransForm = glm::scale(shapeTransForm, glm::vec3(3.0f, 5.0f, 0.0f));
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(shapeTransForm));
@@ -580,6 +581,31 @@ GLvoid drawScene() {
 		glDrawArrays(GL_QUADS, 0, 24);
 
 	}
+	else if (currentMapStage == 5) {
+		// 텍스처를 사용하도록 설정
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textureID[1]);
+		glUniform1i(ourTextureLocation, 0);
+		glUniform1i(textureOnLocation, 1); // TextureOn을 활성화
+
+		// 카메라
+		float cameraZ = 1.0f; // 카메라가 Z축 양의 방향에 위치 (예: Z = 10)
+		cameraPos = glm::vec3(0.0f, 0.0f, cameraZ); // Y, X는 0으로 두고, Z는 고정
+
+		// 뷰잉 변환 (원점을 바라보는 카메라)
+		glm::mat4 vTransform = glm::mat4(1.0f);
+		glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, 0.0f); // 원점을 바라봄
+		glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f); // 카메라의 위쪽 방향 (Y축 고정)
+		vTransform = glm::lookAt(cameraPos, cameraDirection, cameraUp); // 원점을 평행하게 바라보는 카메라
+		glUniformMatrix4fv(viewLocation, 1, GL_FALSE, &vTransform[0][0]);
+
+		// 엔딩(배경)
+		glm::mat4 shapeTransForm = glm::mat4(1.0f);  // 변환 행렬 생성
+		shapeTransForm = glm::scale(shapeTransForm, glm::vec3(3.0f, 5.0f, 0.0f));
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(shapeTransForm));
+	
+		glDrawArrays(GL_QUADS, 0, 24);
+	}
 		
 	// 구를 위한 변환 행렬
 	glm::mat4 sphereModel = glm::mat4(1.0f);
@@ -588,7 +614,7 @@ GLvoid drawScene() {
 	glUniform1i(isSphereLocation, 1); // 구일 때, isSphere을 1로 설정
 	glUniform3f(sphereColorLocation, 1.0f, 1.0f, 1.0f); // 구 색상
 
-	if(currentMapStage != 0) {
+	if(currentMapStage != 0 && currentMapStage != 5) {
 		// GLU 구 생성 및 그리기
 		GLUquadricObj* qobj;
 		qobj = gluNewQuadric();
@@ -837,8 +863,9 @@ void checkCollision() {
 
 		currentMapStage++;
 
-		if (currentMapStage > 4) {
-			currentMapStage = 1; // 마지막 스테이지 이후 처음으로 돌아감
+		if (currentMapStage > 5) {
+			currentMapStage = 0; // 엔딩에서 타이틀로 이동
+			resetBallPosition();
 		}
 	}
 }
