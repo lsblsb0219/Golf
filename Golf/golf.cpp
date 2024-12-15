@@ -171,6 +171,9 @@ glm::vec3 spherePosition(0.0f, 0.55f, 0.0f); // 구의 초기 위치를 저장하는 변수
 glm::vec3 targetPosition = spherePosition; // 목표 위치
 float moveSpeed = 0.02f; // 이동 속도
 
+// 이동 거리
+float move_len = 1.0f;
+
 // 애니메이션 진행 상태를 나타내는 플래그
 bool isAnimating = false;
 
@@ -231,11 +234,7 @@ void checkCollision();
 int currentMapStage = 4; // 현재 맵 스테이지
 int saveMapStage = 1;
 
-// 이동 거리
-float move_len = 1.0f;
-
 int state = 0;
-
 
 // -------- 글씨 --------
 void renderBitmapString(float x, float y, float z, float scale, const char* string);
@@ -686,19 +685,27 @@ GLvoid KeyBoard(unsigned char key, int x, int y) {
 		break;
 	case 'W':
 	case 'w':
-		targetPosition.z -= move_len; // 목표 위치 갱신
+		if(currentMapStage != 0 && currentMapStage != 5) {
+			targetPosition.z -= move_len; // 목표 위치 갱신
+		}
 		break;
 	case 'A':
 	case 'a':
-		targetPosition.x -= move_len; // 목표 위치 갱신
+		if (currentMapStage != 0 && currentMapStage != 5) {
+			targetPosition.x -= move_len; // 목표 위치 갱신
+		}
 		break;
 	case 'S':
 	case 's':
-		targetPosition.z += move_len; // 목표 위치 갱신
+		if (currentMapStage != 0 && currentMapStage != 5) {
+			targetPosition.z += move_len; // 목표 위치 갱신
+		}
 		break;
 	case 'D':
 	case 'd':
-		targetPosition.x += move_len; // 목표 위치 갱신
+		if (currentMapStage != 0 && currentMapStage != 5) {
+			targetPosition.x += move_len; // 목표 위치 갱신
+		}
 		break;
 	case 'R':
 	case 'r':
@@ -748,7 +755,9 @@ GLvoid SpecialKeyBoard(int key, int x, int y) {
 		if (cameraAngle > 360)cameraAngle = 0.f;
 		break;
 	case GLUT_KEY_UP:
-		moveSpeed += 0.05f;
+		if (moveSpeed + 0.05f <= 0.20f) {
+			moveSpeed += 0.05f;
+		}
 		break;
 	case GLUT_KEY_DOWN:
 		if (moveSpeed - 0.05f >= 0.0f) {
@@ -917,6 +926,12 @@ void resetBallPosition() {
 	cameraPos = spherePosition + cameraOffset;
 	cameraAngle = 90.0f;
 	isAnimating = false;
+	isCollisionDetected1 = false;
+	isCollisionDetected2 = false;
+	isCollisionDetected3 = false;
+	isCollisionDetected4 = false;
+	moveSpeed = 0.02f;
+	move_len = 1.0f;
 }
 
 // 장애물 위치 업데이트
