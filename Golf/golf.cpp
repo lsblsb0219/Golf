@@ -861,11 +861,11 @@ GLvoid TimerUpdate(int x) {
 		if (min >= 60) {
 			min = 0;
 			hour++;
-		}
-
-		// 타이머 다시 설정 (1초 후 다시 호출)
-		glutTimerFunc(1000, TimerUpdate, 2);
+		}		
 	}
+	// 타이머 다시 설정 (1초 후 다시 호출)
+	glutTimerFunc(1000, TimerUpdate, 2);
+	std::cout << TimeOn << ", " << sec;
 }
 
 // 깃대 AABB
