@@ -479,44 +479,46 @@ GLvoid drawScene() {
 	}
 
 
-	// 구를 위한 변환 행렬
-	glm::mat4 sphereModel = glm::mat4(1.0f);
-	sphereModel = glm::translate(sphereModel, spherePosition); // 구의 위치를 변수로 설정
-	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(sphereModel));
-	glUniform1i(isSphereLocation, 1); // 구일 때, isSphere을 1로 설정
-	glUniform3f(sphereColorLocation, 1.0f, 1.0f, 1.0f); // 구 색상
-
-
-	// GLU 구 생성 및 그리기
-	GLUquadricObj* qobj;
-	qobj = gluNewQuadric();
-	gluQuadricDrawStyle(qobj, GLU_FILL); // 스타일(와이어LINE, 면FILL)
-	gluQuadricNormals(qobj, GLU_SMOOTH); // 부드러운 노멀
-	gluQuadricOrientation(qobj, GLU_OUTSIDE); // 외부 방향 설정(이러면 카메라가 구 밖에서 구 표면을 보게 됨)
-	gluSphere(qobj, 0.05, 50, 50); // 반지름 0.05, 50개의 세그먼트와 스택
-
-	renderBitmapString(0.5f, 0.8f, 0.05f, 0.005f, "key");
-	renderBitmapString(0.5f, 0.7f, 0.05f, 0.005f, "current");
 	
-	// 사각형 1: move_len
-	float rectHeight1 = move_len * 0.5f; // 이동 거리에 비례
-	drawRectangle(0.95f, 1.0f, 0.05f, rectHeight1, 1.0f, 0.0f, 0.0f); // 빨간색
-	// 텍스트 출력 (화면 위치, 글꼴, 텍스트 내용)
-	renderBitmapString(0.9f, 0.9f, 0.05f, 0.005f, "distance");
-	renderBitmapString(0.9f, 0.8f, 0.05f, 0.005f, "1  ~  4");
-	std::ostringstream oss1;
-	oss1 << move_len;  // move_len 값을 텍스트로 변환
-	renderBitmapString(0.95f, 0.7f, 0.05f, 0.005f, oss1.str().c_str());
+		// 구를 위한 변환 행렬
+		glm::mat4 sphereModel = glm::mat4(1.0f);
+		sphereModel = glm::translate(sphereModel, spherePosition); // 구의 위치를 변수로 설정
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(sphereModel));
+		glUniform1i(isSphereLocation, 1); // 구일 때, isSphere을 1로 설정
+		glUniform3f(sphereColorLocation, 1.0f, 1.0f, 1.0f); // 구 색상
 
-	// 사각형 2: moveSpeed
-	float rectHeight2 = moveSpeed * 10.0f; // 속도에 비례
-	drawRectangle(1.35f, 1.0f, 0.05f, rectHeight2, 0.0f, 0.0f, 1.0f); // 파란색
-	// 텍스트 출력 (화면 위치, 글꼴, 텍스트 내용)
-	renderBitmapString(1.3f, 0.9f, 0.05f, 0.005f, "speed");
-	renderBitmapString(1.3f, 0.8f, 0.05f, 0.005f, "up, down");
-	std::ostringstream oss2;
-	oss2 << moveSpeed;  // moveSpeed 값을 텍스트로 변환
-	renderBitmapString(1.35f, 0.7f, 0.05f, 0.005f, oss2.str().c_str());
+	if(currentMapStage != 0) {
+		// GLU 구 생성 및 그리기
+		GLUquadricObj* qobj;
+		qobj = gluNewQuadric();
+		gluQuadricDrawStyle(qobj, GLU_FILL); // 스타일(와이어LINE, 면FILL)
+		gluQuadricNormals(qobj, GLU_SMOOTH); // 부드러운 노멀
+		gluQuadricOrientation(qobj, GLU_OUTSIDE); // 외부 방향 설정(이러면 카메라가 구 밖에서 구 표면을 보게 됨)
+		gluSphere(qobj, 0.05, 50, 50); // 반지름 0.05, 50개의 세그먼트와 스택
+
+		renderBitmapString(0.5f, 0.8f, 0.05f, 0.005f, "key");
+		renderBitmapString(0.5f, 0.7f, 0.05f, 0.005f, "current");
+
+		// 사각형 1: move_len
+		float rectHeight1 = move_len * 0.5f; // 이동 거리에 비례
+		drawRectangle(0.95f, 1.0f, 0.05f, rectHeight1, 1.0f, 0.0f, 0.0f); // 빨간색
+		// 텍스트 출력 (화면 위치, 글꼴, 텍스트 내용)
+		renderBitmapString(0.9f, 0.9f, 0.05f, 0.005f, "distance");
+		renderBitmapString(0.9f, 0.8f, 0.05f, 0.005f, "1  ~  4");
+		std::ostringstream oss1;
+		oss1 << move_len;  // move_len 값을 텍스트로 변환
+		renderBitmapString(0.95f, 0.7f, 0.05f, 0.005f, oss1.str().c_str());
+
+		// 사각형 2: moveSpeed
+		float rectHeight2 = moveSpeed * 10.0f; // 속도에 비례
+		drawRectangle(1.35f, 1.0f, 0.05f, rectHeight2, 0.0f, 0.0f, 1.0f); // 파란색
+		// 텍스트 출력 (화면 위치, 글꼴, 텍스트 내용)
+		renderBitmapString(1.3f, 0.9f, 0.05f, 0.005f, "speed");
+		renderBitmapString(1.3f, 0.8f, 0.05f, 0.005f, "up, down");
+		std::ostringstream oss2;
+		oss2 << moveSpeed;  // moveSpeed 값을 텍스트로 변환
+		renderBitmapString(1.35f, 0.7f, 0.05f, 0.005f, oss2.str().c_str());
+	}
 
 	glutSwapBuffers();
 }
@@ -547,6 +549,9 @@ GLvoid KeyBoard(unsigned char key, int x, int y) {
 		break;
 	case '4':
 		move_len = 2.0f;
+		break;
+	case 13: // 엔터 키
+		if (currentMapStage == 0) currentMapStage = 1;
 		break;
 	case 'W':
 	case 'w':
@@ -612,9 +617,6 @@ GLvoid SpecialKeyBoard(int key, int x, int y) {
 		if (moveSpeed - 0.05f >= 0.0f) {
 			moveSpeed -= 0.05f;
 		}
-		break;
-	case 13: // 엔터 키
-		if (currentMapStage == 0) currentMapStage = 1;
 		break;
 	}
 	glutPostRedisplay();
