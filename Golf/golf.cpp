@@ -231,17 +231,13 @@ AABB createGolfBallAABB(const glm::vec3& center, float radius);
 void checkCollision();
 
 // -------- 맵 --------
-int currentMapStage = 4; // 현재 맵 스테이지
+int currentMapStage = 0; // 현재 맵 스테이지
 int saveMapStage = 1;
 
 int state = 0;
 
 // -------- 글씨 --------
 void renderBitmapString(float x, float y, float z, float scale, const char* string);
-
-//GLuint textureID[10]; // 여러 텍스처 ID를 저장할 배열
-int currentTextureIndex = 0; // 현재 활성화된 텍스처의 인덱스
-int totalTextures = 3; // 총 텍스처 개수
 
 
 int main(int argc, char** argv)
@@ -374,8 +370,7 @@ void InitBuffer()
 
 	// 텍스처 로드
 	textureID[0] = LoadTexture("title.bmp");
-	textureID[1] = LoadTexture("new_image.bmp"); // 새로운 이미지 추가
-	textureID[2] = LoadTexture("ending.bmp");
+	textureID[1] = LoadTexture("ending.bmp");
 }
 
 GLuint LoadTexture(const char* filename)
@@ -448,9 +443,9 @@ GLvoid drawScene() {
 	if (currentMapStage == 0) {
 		// 텍스처를 사용하도록 설정
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, textureID[currentTextureIndex]); // 현재 텍스처를 바인딩
+		glBindTexture(GL_TEXTURE_2D, textureID[0]);
 		glUniform1i(ourTextureLocation, 0);
-		glUniform1i(textureOnLocation, 1); // 텍스처 활성화
+		glUniform1i(textureOnLocation, 1); // TextureOn을 활성화
 
 		// 카메라
 		float cameraZ = 1.0f; // 카메라가 Z축 양의 방향에 위치 (예: Z = 10)
@@ -462,7 +457,7 @@ GLvoid drawScene() {
 		glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f); // 카메라의 위쪽 방향 (Y축 고정)
 		vTransform = glm::lookAt(cameraPos, cameraDirection, cameraUp); // 원점을 평행하게 바라보는 카메라
 		glUniformMatrix4fv(viewLocation, 1, GL_FALSE, &vTransform[0][0]);
-		
+
 		// 타이틀(배경)
 		glm::mat4 shapeTransForm = glm::mat4(1.0f);  // 변환 행렬 생성
 		shapeTransForm = glm::scale(shapeTransForm, glm::vec3(3.0f, 5.0f, 0.0f));
@@ -470,6 +465,7 @@ GLvoid drawScene() {
 
 		// 기존 정육면체 그리기
 		glDrawArrays(GL_QUADS, 0, 24);
+
 	}
 	else if (currentMapStage == 1) {
 		glm::mat4 shapeTransForm = glm::mat4(1.0f);//변환 행렬 생성 T
@@ -607,10 +603,10 @@ GLvoid drawScene() {
 		glm::mat4 shapeTransForm = glm::mat4(1.0f);  // 변환 행렬 생성
 		shapeTransForm = glm::scale(shapeTransForm, glm::vec3(3.0f, 5.0f, 0.0f));
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(shapeTransForm));
-	
+
 		glDrawArrays(GL_QUADS, 0, 24);
 	}
-		
+
 	// 구를 위한 변환 행렬
 	glm::mat4 sphereModel = glm::mat4(1.0f);
 	sphereModel = glm::translate(sphereModel, spherePosition); // 구의 위치를 변수로 설정
@@ -618,7 +614,7 @@ GLvoid drawScene() {
 	glUniform1i(isSphereLocation, 1); // 구일 때, isSphere을 1로 설정
 	glUniform3f(sphereColorLocation, 1.0f, 1.0f, 1.0f); // 구 색상
 
-	if(currentMapStage != 0 && currentMapStage != 5) {
+	if (currentMapStage != 0 && currentMapStage != 5) {
 		// GLU 구 생성 및 그리기
 		GLUquadricObj* qobj;
 		qobj = gluNewQuadric();
@@ -649,6 +645,20 @@ GLvoid drawScene() {
 		std::ostringstream oss2;
 		oss2 << moveSpeed;  // moveSpeed 값을 텍스트로 변환
 		renderBitmapString(1.35f, 0.7f, 0.05f, 0.005f, oss2.str().c_str());
+	}
+	else if (currentMapStage == 0) {
+		glUniform1i(textureOnLocation, 0); // TextureOn을 비활성화
+		renderBitmapString(-2.0f, -0.4f, 0.5f, 0.005f, "* Game Controls *");
+		renderBitmapString(-2.0f, -0.8f, 0.5f, 0.005f, "WASD : Ball Movement");
+		renderBitmapString(-2.0f, -1.0f, 0.5f, 0.005f, "R : Reset Current Stage");
+		renderBitmapString(-2.0f, -1.2f, 0.5f, 0.005f, "C : Reset Camera View");
+		renderBitmapString(-2.0f, -1.4f, 0.5f, 0.005f, "Q : Return to Title and Quit Game");
+		renderBitmapString(-2.0f, -1.6f, 0.5f, 0.005f, "1234 : Ball Movement Distance");
+		renderBitmapString(-2.0f, -1.8f, 0.5f, 0.005f, "up down : Ball Speed");
+	}
+	else if (currentMapStage == 5) {
+		glUniform1i(textureOnLocation, 0); // TextureOn을 비활성화
+
 	}
 
 	glutSwapBuffers();
@@ -682,22 +692,15 @@ GLvoid KeyBoard(unsigned char key, int x, int y) {
 		move_len = 2.0f;
 		break;
 	case 13: // 엔터 키
-		if (currentMapStage == 0) {
-			currentTextureIndex = (currentTextureIndex + 1) % totalTextures; // 다음 텍스처로 전환
-			glutPostRedisplay(); // 장면 갱신 요청
-		}
-		else {
-			// 기존 엔터 키 동작
-			if (currentMapStage == 0) currentMapStage = saveMapStage;
-			else if (currentMapStage == 5) {
-				currentMapStage = 0; // 엔딩에서 타이틀로 이동
-				resetBallPosition();
-			}
+		if (currentMapStage == 0) currentMapStage = saveMapStage;
+		else if (currentMapStage == 5) {
+			currentMapStage = 0; // 엔딩에서 타이틀로 이동
+			resetBallPosition();
 		}
 		break;
 	case 'W':
 	case 'w':
-		if(currentMapStage != 0 && currentMapStage != 5) {
+		if (currentMapStage != 0 && currentMapStage != 5) {
 			targetPosition.z -= move_len; // 목표 위치 갱신
 		}
 		break;
@@ -733,7 +736,7 @@ GLvoid KeyBoard(unsigned char key, int x, int y) {
 		break;
 	case 'Q':
 	case 'q':
-		if(currentMapStage == 0){
+		if (currentMapStage == 0) {
 			exit(-1);
 		}
 		else {
