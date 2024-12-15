@@ -1,4 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 #include <iostream>
 #include <gl/glew.h>
 #include <gl/freeglut.h>
@@ -149,14 +151,14 @@ void resetBallPosition();
 void updateObstaclePosition();
 void checkObstacleCollision();
 void drawRectangle(float x, float y, float width, float height, float r, float g, float b);
-
+GLuint LoadTexture(const char* filename);
 
 // ------- OpenGL 객체 --------
 GLchar* vertexSource, * fragmentSource;
 GLuint shaderID;
 GLuint vertexShader;
 GLuint fragmentShader;
-GLuint VAO, VBO[2];
+GLuint VAO, VBO[3], textureID[10];
 
 bool hFlag = false;
 bool yFlag = true;
@@ -366,6 +368,35 @@ void InitBuffer()
 	glEnableVertexAttribArray(2);
 
 	glBindVertexArray(0); // VAO 언바인딩
+
+	// 텍스처 로드
+	textureID[0] = LoadTexture("title.bmp");
+}
+
+GLuint LoadTexture(const char* filename)
+{
+	int width, height, channels;
+	stbi_set_flip_vertically_on_load(true); //--- 이미지가거꾸로읽힌다면추가
+	unsigned char* image = stbi_load(filename, &width, &height, &channels, 0);
+	if (image == nullptr)
+	{
+		std::cerr << "ERROR: 텍스처 로딩 실패: " << filename << std::endl;
+		return 0;
+	}
+
+	GLuint texture;
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	stbi_image_free(image);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	return texture;
 }
 
 GLvoid drawScene() {
@@ -410,7 +441,30 @@ GLvoid drawScene() {
 
 	// 맵 생성
 	if (currentMapStage == 0) {
+		// 텍스처를 사용하도록 설정
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textureID[0]);
+		glUniform1i(ourTextureLocation, 0);
+		glUniform1i(textureOnLocation, 1); // TextureOn을 활성화
 
+		// 카메라
+		float cameraZ = 1.0f; // 카메라가 Z축 양의 방향에 위치 (예: Z = 10)
+		cameraPos = glm::vec3(0.0f, 0.0f, cameraZ); // Y, X는 0으로 두고, Z는 고정
+
+		// 뷰잉 변환 (원점을 바라보는 카메라)
+		glm::mat4 vTransform = glm::mat4(1.0f);
+		glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, 0.0f); // 원점을 바라봄
+		glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f); // 카메라의 위쪽 방향 (Y축 고정)
+		vTransform = glm::lookAt(cameraPos, cameraDirection, cameraUp); // 원점을 평행하게 바라보는 카메라
+		glUniformMatrix4fv(viewLocation, 1, GL_FALSE, &vTransform[0][0]);
+		
+		// 타이틀
+		glm::mat4 shapeTransForm = glm::mat4(1.0f);  // 변환 행렬 생성
+		shapeTransForm = glm::scale(shapeTransForm, glm::vec3(3.0f, 5.0f, 0.0f));
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(shapeTransForm));
+
+		// 기존 정육면체 그리기
+		glDrawArrays(GL_QUADS, 0, 24);
 	}
 	else if (currentMapStage == 1) {
 		glm::mat4 shapeTransForm = glm::mat4(1.0f);//변환 행렬 생성 T
