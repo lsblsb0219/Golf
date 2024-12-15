@@ -615,7 +615,7 @@ GLvoid TimerFunc(int x) {
 		spherePosition += direction * moveSpeed;
 
 		// 경계 조건 적용
-		restrictTargetPosition(); // Y축 고정
+		targetPosition.y = boundaryY; // Y축 고정
 
 		// 목표 위치를 넘어가지 않도록 클램핑
 		if (glm::distance(spherePosition, targetPosition) < moveSpeed) {
