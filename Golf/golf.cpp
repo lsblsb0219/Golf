@@ -477,7 +477,6 @@ GLvoid drawScene() {
 
 		// 기존 정육면체 그리기
 		glDrawArrays(GL_QUADS, 0, 24);
-
 	}
 	else if (currentMapStage == 1) {
 		TimeOn = true;
@@ -499,6 +498,8 @@ GLvoid drawScene() {
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(GoalTransForm));
 		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
 		glDrawArrays(GL_QUADS, 0, 24);
+
+		save_sec = sec, save_min = min, save_hour = hour;
 	}
 	else if (currentMapStage == 2 || currentMapStage == 3) {
 		TimeOn = true;
@@ -557,6 +558,8 @@ GLvoid drawScene() {
 				Stage3State = true; // 깃대 이동했다는 상태
 			}
 		}
+
+		save_sec = sec, save_min = min, save_hour = hour;
 	}
 	else if (currentMapStage == 4) {
 		TimeOn = true;
@@ -598,9 +601,7 @@ GLvoid drawScene() {
 		glUniform1i(textureOnLocation, 0); // TextureOn을 비활성화
 		glDrawArrays(GL_QUADS, 0, 24);
 
-		save_hour = hour;
-		save_min = min;
-		save_sec = sec;
+		save_sec = sec, save_min = min, save_hour = hour;
 
 	}
 	else if (currentMapStage == 5) {
@@ -869,6 +870,7 @@ GLvoid TimerUpdate(int x) {
 			hour++;
 		}		
 	}
+	std::cout << TimeOn << "," << sec << ", " << save_sec << '\n';
 	// 타이머 다시 설정 (1초 후 다시 호출)
 	glutTimerFunc(1000, TimerUpdate, 2);
 }
@@ -945,6 +947,7 @@ void checkCollision() {
 		}
 
 		currentMapStage++;
+		sec = save_sec, min = save_min, hour = save_hour;
 	}
 }
 
