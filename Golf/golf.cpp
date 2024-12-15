@@ -171,7 +171,7 @@ float stage2BoundaryMinX = 1.05f, stage2BoundaryMaxX = 2.95f;
 float stage2BoundaryMinZ = -15.45f, stage2BoundaryMaxZ = -4.55f;
 
 float stage4BoundaryMinX = -0.95f, stage4BoundaryMaxX = 0.95f;
-float stage4BoundaryMinZ = -10.45f, stage4BoundaryMaxZ = 0.45f;
+float stage4BoundaryMinZ1 = -10.45f, stage4BoundaryMinZ2 = -20.85f, stage4BoundaryMaxZ = 0.45f;
 
 float boundaryY = 0.55f;  // Y축 고정값 (육면체 상단)
 
@@ -578,8 +578,6 @@ GLvoid KeyBoard(unsigned char key, int x, int y) {
 	// 스테이지별 경계 제한
 	restrictTargetPosition();
 
-	targetPosition.y = boundaryY; // Y축 고정
-
 	// 목표 위치와 현재 위치가 동일하면 애니메이션 종료
 	if (glm::distance(spherePosition, targetPosition) < 0.01f) {
 		isAnimating = false;
@@ -620,8 +618,7 @@ GLvoid TimerFunc(int x) {
 		spherePosition += direction * moveSpeed;
 
 		// 경계 조건 적용
-		restrictTargetPosition();
-		spherePosition.y = boundaryY; // Y축 고정
+		restrictTargetPosition(); // Y축 고정
 
 		// 목표 위치를 넘어가지 않도록 클램핑
 		if (glm::distance(spherePosition, targetPosition) < moveSpeed) {
@@ -633,11 +630,14 @@ GLvoid TimerFunc(int x) {
 	// 카메라도 공을 따라 이동
 	cameraPos = spherePosition + cameraOffset;
 
-	// 장애물 위치 업데이트
-	updateObstaclePosition();
 
-	// 장애물과 충돌 검사
-	checkObstacleCollision();
+	if (currentMapStage == 2 || currentMapStage == 3) {
+		// 장애물 위치 업데이트
+		updateObstaclePosition();
+
+		// 장애물과 충돌 검사
+		checkObstacleCollision();
+	}
 
 	// 충돌 검사 함수 호출
 	checkCollision();
@@ -732,6 +732,8 @@ void restrictTargetPosition() {
 		if (targetPosition.x > stage1BoundaryMaxX) targetPosition.x = stage1BoundaryMaxX;
 		if (targetPosition.z < stage1BoundaryMinZ) targetPosition.z = stage1BoundaryMinZ;
 		if (targetPosition.z > stage1BoundaryMaxZ) targetPosition.z = stage1BoundaryMaxZ;
+
+		spherePosition.y = boundaryY;
 	}
 	else if (currentMapStage == 2 || currentMapStage == 3) {
 		if (targetPosition.z >= -4.5f) {
@@ -763,16 +765,24 @@ void restrictTargetPosition() {
 		else {
 			state = 0;
 		}
+
+		spherePosition.y = boundaryY;
 	}
 	else if (currentMapStage == 4) {
-		if (targetPosition.x < stage4BoundaryMinX) {
-			targetPosition.x = stage4BoundaryMinX;
+		if (targetPosition.z >= stage4BoundaryMinZ1) {
+			if (targetPosition.x < stage4BoundaryMinX) targetPosition.x = stage4BoundaryMinX;
+			if (targetPosition.x > stage4BoundaryMaxX) targetPosition.x = stage4BoundaryMaxX;
+			if (targetPosition.z > stage4BoundaryMaxZ) targetPosition.z = stage4BoundaryMaxZ;
+
+
+			spherePosition.y = boundaryY;
 		}
-		if (targetPosition.x > stage4BoundaryMaxX) {
-			targetPosition.x = stage4BoundaryMaxX;
-		}
-		if (targetPosition.z > stage4BoundaryMaxZ) {
-			targetPosition.z = stage4BoundaryMaxZ;
+		else {
+			if (targetPosition.x < stage4BoundaryMinX) targetPosition.x = stage4BoundaryMinX;
+			if (targetPosition.x > stage4BoundaryMaxX) targetPosition.x = stage4BoundaryMaxX;
+			if (targetPosition.z < stage4BoundaryMinZ2) targetPosition.z = stage4BoundaryMinZ2;
+
+			spherePosition.y = -1.95f;
 		}
 	}
 }
