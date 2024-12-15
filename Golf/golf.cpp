@@ -189,6 +189,7 @@ void checkCollision();
 
 // -------- 맵 --------
 int currentMapStage = 0; // 현재 맵 스테이지
+int saveMapStage = 1;
 
 // 이동 거리
 float move_len = 1.0f;
@@ -551,7 +552,7 @@ GLvoid KeyBoard(unsigned char key, int x, int y) {
 		move_len = 2.0f;
 		break;
 	case 13: // 엔터 키
-		if (currentMapStage == 0) currentMapStage = 1;
+		if (currentMapStage == 0) currentMapStage = saveMapStage;
 		break;
 	case 'W':
 	case 'w':
@@ -583,7 +584,13 @@ GLvoid KeyBoard(unsigned char key, int x, int y) {
 		break;
 	case 'Q':
 	case 'q':
-		exit(-1);
+		if(currentMapStage == 0){
+			exit(-1);
+		}
+		else {
+			saveMapStage = currentMapStage;
+			currentMapStage = 0;
+		}
 	}
 
 	// 스테이지별 경계 제한
