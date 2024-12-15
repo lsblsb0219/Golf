@@ -138,6 +138,7 @@ bool isAnimating = false;
 glm::vec3 cameraOffset(0.0f, 0.3f, 0.5f); // 공과 카메라 사이의 고정 거리 (위, 뒤)
 glm::vec3 cameraPos = spherePosition + cameraOffset; // 초기 카메라 위치
 glm::vec3 initialCameraDir = glm::normalize(-cameraOffset); // 공을 바라보는 초기 방향
+float cameraAngle = 90.0f; // 카메라의 회전 각도 (초기값 0도)
 
 // -------- 골대 --------
 glm::mat4 GoalTransForm;
@@ -350,9 +351,15 @@ GLvoid drawScene() {
 	kTransform = glm::translate(kTransform, glm::vec3(0.0, 0.0, -5.0f));
 	glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, &kTransform[0][0]);
 
+	// 카메라 위치 계산
+	float radius = glm::length(cameraOffset); // 공과 카메라 사이 거리 (반지름)
+	float cameraX = spherePosition.x + radius * cos(glm::radians(cameraAngle)); // 회전된 X 좌표
+	float cameraZ = spherePosition.z + radius * sin(glm::radians(cameraAngle)); // 회전된 Z 좌표
+	float cameraY = spherePosition.y + cameraOffset.y; // Y축은 고정
+	cameraPos = glm::vec3(cameraX, cameraY, cameraZ); // 갱신된 카메라 위치qq
+
 	// 뷰잉 변환
-	glm::mat4 vTransform = glm::mat4(1.0f);
-	// 카메라가 공을 바라보도록 설정
+	glm::mat4 vTransform = glm::mat4(1.0f); // 카메라가 공을 바라보도록 설정
 	glm::vec3 cameraDirection = spherePosition; // 공의 현재 위치를 바라봄
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f); // 카메라의 위쪽 방향
 
@@ -362,7 +369,6 @@ GLvoid drawScene() {
 	// 맵 생성
 	if (currentMapStage == 1) {
 		glm::mat4 shapeTransForm = glm::mat4(1.0f);//변환 행렬 생성 T
-		shapeTransForm = glm::rotate(shapeTransForm, glm::radians(yAngle), glm::vec3(0.0, 1.0, 0.0));//y축 회전
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(shapeTransForm));//변환 행렬을 셰이더에 전달
 		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
 		glDrawArrays(GL_QUADS, 0, 24); //정육면체
@@ -382,14 +388,12 @@ GLvoid drawScene() {
 	else if (currentMapStage == 2 || currentMapStage == 3) {
 		// 첫 번째 정육면체
 		glm::mat4 shapeTransForm = glm::mat4(1.0f); // 기본 변환 행렬 생성
-		shapeTransForm = glm::rotate(shapeTransForm, glm::radians(yAngle), glm::vec3(0.0, 1.0, 0.0)); // y축 회전
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(shapeTransForm)); // 변환 행렬을 셰이더에 전달
 		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
 		glDrawArrays(GL_QUADS, 0, 24); // 정육면체
 
 		// 두 번째 정육면체 (오른쪽에 배치)
 		glm::mat4 shapeTransForm2 = glm::mat4(1.0f); // 기본 변환 행렬 생성
-		shapeTransForm2 = glm::rotate(shapeTransForm2, glm::radians(yAngle), glm::vec3(0.0, 1.0, 0.0)); // y축 회전
 		shapeTransForm2 = glm::translate(shapeTransForm2, glm::vec3(2.0f, 0.0f, -5.0f)); // 오른쪽으로 이동
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(shapeTransForm2)); // 변환 행렬을 셰이더에 전달
 		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
@@ -438,14 +442,12 @@ GLvoid drawScene() {
 	else if (currentMapStage == 4) {
 		// 첫 번째 사각형
 		glm::mat4 shapeTransForm = glm::mat4(1.0f);//변환 행렬 생성 T
-		shapeTransForm = glm::rotate(shapeTransForm, glm::radians(yAngle), glm::vec3(0.0, 1.0, 0.0));//y축 회전
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(shapeTransForm));//변환 행렬을 셰이더에 전달
 		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
 		glDrawArrays(GL_QUADS, 0, 24); //정육면체
 
 		// 두 번째 사각형(절벽 아래)
 		glm::mat4 shapeTransForm2 = glm::mat4(1.0f); // 기본 변환 행렬 생성
-		shapeTransForm2 = glm::rotate(shapeTransForm2, glm::radians(yAngle), glm::vec3(0.0, 1.0, 0.0)); // y축 회전
 		shapeTransForm2 = glm::translate(shapeTransForm2, glm::vec3(0.0f, -2.0f, -10.0f)); // 아래쪽으로 이동
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(shapeTransForm2)); // 변환 행렬을 셰이더에 전달
 		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
@@ -567,6 +569,10 @@ GLvoid KeyBoard(unsigned char key, int x, int y) {
 			Stage3State = false;
 		}
 		break;
+	case 'C':
+	case 'c':
+		cameraAngle = 90.0f;
+		break;
 	case 'Q':
 	case 'q':
 		exit(-1);
@@ -589,12 +595,12 @@ GLvoid KeyBoard(unsigned char key, int x, int y) {
 GLvoid SpecialKeyBoard(int key, int x, int y) {
 	switch (key) {
 	case GLUT_KEY_LEFT:
-		yAngle = yAngle - 1.f;
-		if (yAngle > 360)yAngle = 0.f;
+		cameraAngle = cameraAngle - 1.f;
+		if (cameraAngle > 360)cameraAngle = 0.f;
 		break;
 	case GLUT_KEY_RIGHT:
-		yAngle = yAngle + 1.f;
-		if (yAngle > 360)yAngle = 0.f;
+		cameraAngle = cameraAngle + 1.f;
+		if (cameraAngle > 360)cameraAngle = 0.f;
 		break;
 	case GLUT_KEY_UP:
 		moveSpeed += 0.05f;
@@ -768,6 +774,7 @@ void resetBallPosition() {
 	spherePosition = glm::vec3(0.0f, 0.55f, 0.0f);
 	targetPosition = spherePosition;
 	cameraPos = spherePosition + cameraOffset;
+	cameraAngle = 90.0f;
 	isAnimating = false;
 }
 
