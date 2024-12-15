@@ -158,7 +158,7 @@ GLuint vertexShader;
 GLuint fragmentShader;
 GLuint VAO, VBO[2];
 
-bool hFlag = false;
+bool hFlag = true;
 bool yFlag = true;
 
 float yAngle{};
@@ -376,7 +376,7 @@ GLvoid drawScene() {
 	glClearColor(0.698f, 0.886f, 0.871f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	hFlag ? glDisable(GL_DEPTH_TEST) : glEnable(GL_DEPTH_TEST);//은면제거
+	hFlag ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);//은면제거
 	yFlag ? glPolygonMode(GL_FRONT_AND_BACK, GL_FILL) : glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);//와이어 객체
 
 	unsigned int modelLocation = glGetUniformLocation(shaderID, "modelTransform");//월드 변환 행렬값을 셰이더의 uniform mat4 modelTransform에게 넘겨줌
