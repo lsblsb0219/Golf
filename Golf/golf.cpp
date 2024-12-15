@@ -231,7 +231,7 @@ AABB createGolfBallAABB(const glm::vec3& center, float radius);
 void checkCollision();
 
 // -------- 맵 --------
-int currentMapStage = 4; // 현재 맵 스테이지
+int currentMapStage = 0; // 현재 맵 스테이지
 int saveMapStage = 1;
 
 int state = 0;
@@ -465,6 +465,7 @@ GLvoid drawScene() {
 
 		// 기존 정육면체 그리기
 		glDrawArrays(GL_QUADS, 0, 24);
+
 	}
 	else if (currentMapStage == 1) {
 		glm::mat4 shapeTransForm = glm::mat4(1.0f);//변환 행렬 생성 T
@@ -644,6 +645,20 @@ GLvoid drawScene() {
 		std::ostringstream oss2;
 		oss2 << moveSpeed;  // moveSpeed 값을 텍스트로 변환
 		renderBitmapString(1.35f, 0.7f, 0.05f, 0.005f, oss2.str().c_str());
+	}
+	else if (currentMapStage == 0) {
+		glUniform1i(textureOnLocation, 0); // TextureOn을 비활성화
+		renderBitmapString(-2.0f, -0.4f, 0.5f, 0.005f, "* Game Controls *");
+		renderBitmapString(-2.0f, -0.8f, 0.5f, 0.005f, "WASD : Ball Movement");
+		renderBitmapString(-2.0f, -1.0f, 0.5f, 0.005f, "R : Reset Current Stage");
+		renderBitmapString(-2.0f, -1.2f, 0.5f, 0.005f, "C : Reset Camera View");
+		renderBitmapString(-2.0f, -1.4f, 0.5f, 0.005f, "Q : Return to Title and Quit Game");
+		renderBitmapString(-2.0f, -1.6f, 0.5f, 0.005f, "1234 : Ball Movement Distance");
+		renderBitmapString(-2.0f, -1.8f, 0.5f, 0.005f, "up down : Ball Speed");
+	}
+	else if (currentMapStage == 5) {
+		glUniform1i(textureOnLocation, 0); // TextureOn을 비활성화
+
 	}
 
 	glutSwapBuffers();
