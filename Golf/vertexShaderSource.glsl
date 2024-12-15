@@ -2,7 +2,9 @@
 
 layout (location = 0) in vec3 in_Position;
 layout (location = 1) in vec3 in_Color;
+layout (location = 2) in vec2 aTexCoord;
 out vec3 out_Color;
+out vec2 TexCoord;
 
 uniform mat4 modelTransform;
 uniform mat4 projectionTransform;
@@ -21,5 +23,6 @@ void main(void)
 	}
 
 	gl_Position =  projectionTransform *viewTransform * modelTransform*vec4 (in_Position.x, in_Position.y, in_Position.z, 1.0);
+	TexCoord = aTexCoord;
 
 }

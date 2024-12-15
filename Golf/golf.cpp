@@ -100,6 +100,44 @@ float vertexColor[] = {
 
 };//정육면체, 축,정사면체 색깔들
 
+float texCoords[] = {
+	// 앞면
+	0.0f, 1.0f, // 좌상
+	0.0f, 0.0f, // 좌하
+	1.0f, 0.0f, // 우하
+	1.0f, 1.0f, // 우상
+
+	// 윗면
+	0.0f, 1.0f, // 좌상
+	0.0f, 0.0f, // 좌하
+	1.0f, 0.0f, // 우하
+	1.0f, 1.0f, // 우상
+
+	// 왼쪽 옆면
+	0.0f, 1.0f, // 좌상
+	0.0f, 0.0f, // 좌하
+	1.0f, 0.0f, // 우하
+	1.0f, 1.0f, // 우상
+
+	// 뒷면
+	0.0f, 1.0f, // 좌상
+	0.0f, 0.0f, // 좌하
+	1.0f, 0.0f, // 우하
+	1.0f, 1.0f, // 우상
+
+	// 아랫면
+	0.0f, 1.0f, // 좌상
+	0.0f, 0.0f, // 좌하
+	1.0f, 0.0f, // 우하
+	1.0f, 1.0f, // 우상
+
+	// 오른쪽 옆면
+	0.0f, 1.0f, // 좌상
+	0.0f, 0.0f, // 좌하
+	1.0f, 0.0f, // 우하
+	1.0f, 1.0f  // 우상
+};
+
 // ------- 기타 선언 함수 --------
 void InitBuffer();
 void make_vertexShaders();
@@ -304,29 +342,30 @@ GLuint make_shaderProgram()
 void InitBuffer()
 {
 	glGenVertexArrays(1, &VAO); //--- VAO 를 지정하고 할당하기
-	glGenBuffers(2, VBO); //--- 2개의 VBO를 지정하고 할당하기
+	glGenBuffers(3, VBO); //--- 2개의 VBO를 지정하고 할당하기
 
 
 	glBindVertexArray(VAO);
 
+	// 1. 정점 위치 데이터 처리
 	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
-
-	glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(vertexPosition), vertexPosition, GL_STATIC_DRAW);
-
-
-
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexPosition), vertexPosition, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
 	glEnableVertexAttribArray(0);
 
+	// 2. 색상 데이터 처리
 	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
-
-	glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(vertexColor), vertexColor, GL_STATIC_DRAW);
-
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexColor), vertexColor, GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
 	glEnableVertexAttribArray(1);
 
+	// 3. 텍스처 좌표 데이터 처리
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(texCoords), texCoords, GL_STATIC_DRAW);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0); // location 2에 매핑
+	glEnableVertexAttribArray(2);
+
+	glBindVertexArray(0); // VAO 언바인딩
 }
 
 GLvoid drawScene() {
@@ -345,6 +384,9 @@ GLvoid drawScene() {
 	unsigned int projectionLocation = glGetUniformLocation(shaderID, "projectionTransform");//위와 동일
 	unsigned int isSphereLocation = glGetUniformLocation(shaderID, "isSphere");
 	unsigned int sphereColorLocation = glGetUniformLocation(shaderID, "sphereColor");
+	unsigned int vColorLocation = glGetUniformLocation(shaderID, "vColor");
+	unsigned int textureOnLocation = glGetUniformLocation(shaderID, "TextureOn");
+	unsigned int ourTextureLocation = glGetUniformLocation(shaderID, "ourTexture");
 
 	//원근 투영
 	glm::mat4 kTransform = glm::mat4(1.0f);
@@ -363,7 +405,6 @@ GLvoid drawScene() {
 	glm::mat4 vTransform = glm::mat4(1.0f); // 카메라가 공을 바라보도록 설정
 	glm::vec3 cameraDirection = spherePosition; // 공의 현재 위치를 바라봄
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f); // 카메라의 위쪽 방향
-
 	vTransform = glm::lookAt(cameraPos, cameraDirection, cameraUp);
 	glUniformMatrix4fv(viewLocation, 1, GL_FALSE, &vTransform[0][0]);
 
@@ -374,7 +415,8 @@ GLvoid drawScene() {
 	else if (currentMapStage == 1) {
 		glm::mat4 shapeTransForm = glm::mat4(1.0f);//변환 행렬 생성 T
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(shapeTransForm));//변환 행렬을 셰이더에 전달
-		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
+		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정		
+		glUniform1i(textureOnLocation, 0); // TextureOn을 비활성화
 		glDrawArrays(GL_QUADS, 0, 24); //정육면체
 
 		// 깃대 생성
@@ -394,6 +436,7 @@ GLvoid drawScene() {
 		glm::mat4 shapeTransForm = glm::mat4(1.0f); // 기본 변환 행렬 생성
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(shapeTransForm)); // 변환 행렬을 셰이더에 전달
 		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
+		glUniform1i(textureOnLocation, 0); // TextureOn을 비활성화
 		glDrawArrays(GL_QUADS, 0, 24); // 정육면체
 
 		// 두 번째 정육면체 (오른쪽에 배치)
@@ -415,6 +458,7 @@ GLvoid drawScene() {
 		GoalTransForm = glm::scale(GoalTransForm, glm::vec3(0.05f, 2.0f, 0.01f));
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(GoalTransForm));
 		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
+		glUniform1i(textureOnLocation, 0); // TextureOn을 비활성화
 		glDrawArrays(GL_QUADS, 0, 24);
 
 		// 장애물 1 렌더링
@@ -448,6 +492,7 @@ GLvoid drawScene() {
 		glm::mat4 shapeTransForm = glm::mat4(1.0f);//변환 행렬 생성 T
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(shapeTransForm));//변환 행렬을 셰이더에 전달
 		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
+		glUniform1i(textureOnLocation, 0); // TextureOn을 비활성화
 		glDrawArrays(GL_QUADS, 0, 24); //정육면체
 
 		// 두 번째 사각형(절벽 아래)
@@ -455,6 +500,7 @@ GLvoid drawScene() {
 		shapeTransForm2 = glm::translate(shapeTransForm2, glm::vec3(0.0f, -2.0f, -10.0f)); // 아래쪽으로 이동
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(shapeTransForm2)); // 변환 행렬을 셰이더에 전달
 		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
+		glUniform1i(textureOnLocation, 0); // TextureOn을 비활성화
 		glDrawArrays(GL_QUADS, 0, 24); // 정육면체
 
 		// 깃대 생성
@@ -467,6 +513,7 @@ GLvoid drawScene() {
 		GoalTransForm = glm::scale(GoalTransForm, glm::vec3(0.05f, 2.0f, 0.01f));
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(GoalTransForm));
 		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
+		glUniform1i(textureOnLocation, 0); // TextureOn을 비활성화
 		glDrawArrays(GL_QUADS, 0, 24);
 
 		// 가짜 깃대 생성
@@ -475,18 +522,17 @@ GLvoid drawScene() {
 		FakeGoalTransForm = glm::scale(FakeGoalTransForm, glm::vec3(0.05f, 2.0f, 0.01f));
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(FakeGoalTransForm));
 		glUniform1i(isSphereLocation, 0); // 직육면체일 때 isSphere를 0으로 설정
+		glUniform1i(textureOnLocation, 0); // TextureOn을 비활성화
 		glDrawArrays(GL_QUADS, 0, 24);
 
 	}
-
-
-	
-		// 구를 위한 변환 행렬
-		glm::mat4 sphereModel = glm::mat4(1.0f);
-		sphereModel = glm::translate(sphereModel, spherePosition); // 구의 위치를 변수로 설정
-		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(sphereModel));
-		glUniform1i(isSphereLocation, 1); // 구일 때, isSphere을 1로 설정
-		glUniform3f(sphereColorLocation, 1.0f, 1.0f, 1.0f); // 구 색상
+		
+	// 구를 위한 변환 행렬
+	glm::mat4 sphereModel = glm::mat4(1.0f);
+	sphereModel = glm::translate(sphereModel, spherePosition); // 구의 위치를 변수로 설정
+	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(sphereModel));
+	glUniform1i(isSphereLocation, 1); // 구일 때, isSphere을 1로 설정
+	glUniform3f(sphereColorLocation, 1.0f, 1.0f, 1.0f); // 구 색상
 
 	if(currentMapStage != 0) {
 		// GLU 구 생성 및 그리기
