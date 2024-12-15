@@ -231,13 +231,17 @@ AABB createGolfBallAABB(const glm::vec3& center, float radius);
 void checkCollision();
 
 // -------- 맵 --------
-int currentMapStage = 4; // 현재 맵 스테이지
+int currentMapStage = 0; // 현재 맵 스테이지
 int saveMapStage = 1;
 
 int state = 0;
 
 // -------- 글씨 --------
 void renderBitmapString(float x, float y, float z, float scale, const char* string);
+
+//GLuint textureID[10]; // 여러 텍스처 ID를 저장할 배열
+int currentTextureIndex = 0; // 현재 활성화된 텍스처의 인덱스
+int totalTextures = 3; // 총 텍스처 개수
 
 
 int main(int argc, char** argv)
@@ -370,7 +374,8 @@ void InitBuffer()
 
 	// 텍스처 로드
 	textureID[0] = LoadTexture("title.bmp");
-	textureID[1] = LoadTexture("ending.bmp");
+	textureID[1] = LoadTexture("new_image.bmp"); // 새로운 이미지 추가
+	textureID[2] = LoadTexture("ending.bmp");
 }
 
 GLuint LoadTexture(const char* filename)
@@ -443,9 +448,9 @@ GLvoid drawScene() {
 	if (currentMapStage == 0) {
 		// 텍스처를 사용하도록 설정
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, textureID[0]);
+		glBindTexture(GL_TEXTURE_2D, textureID[currentTextureIndex]); // 현재 텍스처를 바인딩
 		glUniform1i(ourTextureLocation, 0);
-		glUniform1i(textureOnLocation, 1); // TextureOn을 활성화
+		glUniform1i(textureOnLocation, 1); // 텍스처 활성화
 
 		// 카메라
 		float cameraZ = 1.0f; // 카메라가 Z축 양의 방향에 위치 (예: Z = 10)
@@ -677,10 +682,17 @@ GLvoid KeyBoard(unsigned char key, int x, int y) {
 		move_len = 2.0f;
 		break;
 	case 13: // 엔터 키
-		if (currentMapStage == 0) currentMapStage = saveMapStage;
-		else if (currentMapStage == 5) {
-			currentMapStage = 0; // 엔딩에서 타이틀로 이동
-			resetBallPosition();
+		if (currentMapStage == 0) {
+			currentTextureIndex = (currentTextureIndex + 1) % totalTextures; // 다음 텍스처로 전환
+			glutPostRedisplay(); // 장면 갱신 요청
+		}
+		else {
+			// 기존 엔터 키 동작
+			if (currentMapStage == 0) currentMapStage = saveMapStage;
+			else if (currentMapStage == 5) {
+				currentMapStage = 0; // 엔딩에서 타이틀로 이동
+				resetBallPosition();
+			}
 		}
 		break;
 	case 'W':
