@@ -232,7 +232,7 @@ AABB createGolfBallAABB(const glm::vec3& center, float radius);
 void checkCollision();
 
 // -------- 맵 --------
-int currentMapStage = 4; // 현재 맵 스테이지
+int currentMapStage = 0; // 현재 맵 스테이지
 int saveMapStage = 1;
 
 int state = 0;
